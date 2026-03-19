@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 import { createClient } from "@supabase/supabase-js"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  secret: process.env.AUTH_SECRET,
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
