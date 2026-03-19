@@ -94,14 +94,16 @@ export async function generateStaticParams() {
   return ALL_SLUGS.map((slug) => ({ slug }))
 }
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = POSTS[params.slug]
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params
+  const post = POSTS[slug]
   if (!post) return {}
   return { title: `${post.title} | Shigruvedas Blog`, description: post.title }
 }
 
-export default function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = POSTS[params.slug]
+export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const post = POSTS[slug]
 
   // For posts without full content yet, show a coming-soon placeholder
   if (!post) {

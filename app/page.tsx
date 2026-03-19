@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import {
     ArrowRight, Leaf, Shield, Truck, Star, CheckCircle2, Zap, Heart, Phone, ChevronRight
 } from "lucide-react"
+import { createSimpleClient } from "@/lib/supabase/client"
 
 export const metadata: Metadata = {
   title: "Organic Moringa Products — Fresh from Rajasthan Farm | Shigruvedas",
@@ -14,38 +15,29 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://shigruvedas.com" },
 }
 
-const PRODUCTS = [
-  {
-    name: "Moringa Powder",
-    slug: "organic-moringa-powder",
-    desc: "Stone-ground from sun-dried leaves. Rich in 90+ nutrients.",
-    price: "₹149",
-    weight: "100g",
-    image: "/images/powder2.png",
-    badge: "Best Seller",
-    badgeColor: "bg-amber-500",
-  },
-  {
-    name: "Fresh Moringa Leaves",
-    slug: "fresh-organic-moringa-leaves",
-    desc: "Hand-picked daily from our organic farm. Maximum freshness.",
-    price: "₹99",
-    weight: "100g",
-    image: "/images/leaves2.png",
-    badge: "Farm Fresh",
+async function getFeaturedProducts() {
+  const supabase = createSimpleClient()
+  const { data } = await supabase
+    .from("products")
+    .select(`
+      *,
+      product_variants (*)
+    `)
+    .eq("is_active", true)
+    .eq("is_featured", true)
+    .limit(3)
+  
+  return (data || []).map((p: any) => ({
+    name: p.name,
+    slug: p.slug,
+    desc: p.short_description,
+    price: `₹${Math.min(...p.product_variants.map((v: any) => v.price))}`,
+    weight: p.product_variants[0]?.weight || "",
+    image: p.thumbnail,
+    badge: p.category.replace("-", " "),
     badgeColor: "bg-green-600",
-  },
-  {
-    name: "Moringa Drumsticks",
-    slug: "fresh-moringa-drumsticks",
-    desc: "Tender pods for sambar, sabzi & curries. High fiber.",
-    price: "₹89",
-    weight: "250g",
-    image: "/images/drumstick2.png",
-    badge: "Popular",
-    badgeColor: "bg-blue-600",
-  },
-]
+  }))
+}
 
 const STATS = [
   { value: "7+", label: "Acres of Organic Farm" },
@@ -94,7 +86,8 @@ const BENEFITS = [
   "Rich in all essential amino acids",
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const products = await getFeaturedProducts()
   return (
     <div className="min-h-screen bg-white">
       {/* ─── HERO ─────────────────────────────────────────────────── */}
@@ -207,22 +200,22 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 mb-8">
-            {PRODUCTS.map((product) => (
+            {products.map((product: any) => (
               <Link key={product.slug} href={`/products/${product.slug}`} className="group">
                 <div className="bg-white rounded-3xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
                   <div className="relative bg-gradient-to-br from-green-50 to-emerald-50 aspect-square overflow-hidden">
                     <Image
-                      src={product.image}
+                      src={product.image || "/images/placeholder.png"}
                       alt={product.name}
                       fill
                       className="object-contain p-10 group-hover:scale-110 transition-transform duration-500"
                     />
-                    <span className={`absolute top-4 left-4 ${product.badgeColor} text-white text-xs font-bold px-3 py-1 rounded-full`}>
+                    <span className={`absolute top-4 left-4 ${product.badgeColor} text-white text-xs font-bold px-3 py-1 rounded-full capitalize`}>
                       {product.badge}
                     </span>
                   </div>
                   <div className="p-6 flex flex-col flex-1">
-                    <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-green-700 transition-colors">{product.name}</h3>
+                    <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-green-700 transition-colors uppercase">{product.name}</h3>
                     <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">{product.desc}</p>
                     <div className="flex items-center justify-between">
                       <div>

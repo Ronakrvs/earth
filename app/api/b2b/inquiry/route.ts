@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
@@ -14,18 +15,20 @@ export async function POST(req: Request) {
       message: formData.get("message"),
     }
 
-    // Store in Supabase (uncomment when Supabase is configured)
-    // const supabase = await createAdminClient()
-    // await supabase.from("b2b_inquiries").insert([{
-    //   company_name: data.company_name,
-    //   contact_name: data.contact_name,
-    //   email: data.email,
-    //   phone: data.phone,
-    //   business_type: data.business_type,
-    //   products_interested: [data.products],
-    //   monthly_quantity: data.monthly_quantity,
-    //   message: data.message,
-    // }])
+    // Store in Supabase
+    const supabase = await createAdminClient()
+    const { error } = await supabase.from("b2b_inquiries").insert([{
+      company_name: data.company_name,
+      contact_name: data.contact_name,
+      email: data.email,
+      phone: data.phone,
+      business_type: data.business_type,
+      products_interested: [data.products],
+      monthly_quantity: data.monthly_quantity,
+      message: data.message,
+    }])
+
+    if (error) throw error
 
     // Redirect to thank you message
     return NextResponse.redirect(new URL("/b2b?submitted=true", req.url))

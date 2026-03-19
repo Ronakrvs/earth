@@ -17,19 +17,20 @@ export default function ContactPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     const form = e.currentTarget
+    const formData = new FormData(form)
+    const body = Object.fromEntries(formData.entries())
 
-    // Submit to Netlify using FormData
-    fetch("/__forms.html", {
+    fetch("/api/contact", {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(new FormData(form) as any).toString(),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
     })
-      .then(() =>{ setIsModalOpen(true)
-        
-      formRef.current?.reset() })
-
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to submit")
+        setIsModalOpen(true)
+        formRef.current?.reset()
+      })
       .catch((error) => alert("Form submission failed: " + error.message))
-    
   }
 
   return (

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import Razorpay from "razorpay"
+import { createClient } from "@/lib/supabase/server"
 
 const razorpay = new Razorpay({
   key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
@@ -21,13 +22,58 @@ export async function POST(req: Request) {
     })
 
     // Store pending order in Supabase
-    // (Supabase integration requires env vars — placeholder structure here)
-    const dbOrderId = razorpayOrder.id // Replace with actual Supabase insert ID
+    const supabase = await createClient()
+    
+    // Generate order number (optional as DB has a trigger, but let's be explicit if needed)
+    // Actually, schema.sql has a function but no trigger on public.orders for it. 
+    // Let's use the DB function if possible or just let it fail if not provided.
+    // The schema says: order_number TEXT UNIQUE NOT NULL
+    
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert([{
+        user_id: session?.user?.id,
+        order_number: razorpayOrder.receipt, // Using receipt as temp order number or use DB function
+        status: "pending",
+        payment_status: "pending",
+        razorpay_order_id: razorpayOrder.id,
+        subtotal,
+        shipping_amount: shippingAmount,
+        total,
+        shipping_name: shipping.name,
+        shipping_phone: shipping.phone,
+        shipping_address: shipping.address,
+        shipping_city: shipping.city,
+        shipping_state: shipping.state,
+        shipping_pincode: shipping.pincode,
+      }])
+      .select()
+      .single()
+
+    if (orderError) throw orderError
+
+    // Store order items
+    const orderItems = items.map((item: any) => ({
+      order_id: order.id,
+      product_id: item.product_id,
+      variant_id: item.variant_id,
+      product_name: item.name,
+      variant_weight: item.weight,
+      quantity: item.quantity,
+      unit_price: item.price,
+      total_price: item.price * item.quantity,
+    }))
+
+    const { error: itemsError } = await supabase
+      .from("order_items")
+      .insert(orderItems)
+
+    if (itemsError) throw itemsError
 
     return NextResponse.json({
-      orderId: dbOrderId,
+      orderId: order.id,
       razorpayOrderId: razorpayOrder.id,
-      dbOrderId,
+      dbOrderId: order.id,
       amount: razorpayOrder.amount,
       currency: razorpayOrder.currency,
     })

@@ -4,65 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Leaf, Star } from "lucide-react"
 import ProductCard from "@/components/shop/ProductCard"
 import SortSelect from "@/components/shop/SortSelect"
+import { createSimpleClient } from "@/lib/supabase/client"
 
 export const metadata: Metadata = {
   title: "Shop Organic Moringa Products | Shigruvedas",
   description: "Browse our range of organic moringa powder, fresh leaves, and drumsticks. Multiple weight options, competitive pricing, free delivery across India.",
 }
-
-// Static product data (replace with DB fetch once Supabase is configured)
-const PRODUCTS = [
-  {
-    id: "1",
-    name: "Organic Moringa Powder",
-    slug: "organic-moringa-powder",
-    short_description: "Pure organic moringa leaf powder, stone-ground for maximum nutrition. Perfect for smoothies, cooking & supplements.",
-    category: "moringa-powder",
-    thumbnail: "/images/powder2.png",
-    is_featured: true,
-    avg_rating: 4.9,
-    review_count: 67,
-    product_variants: [
-      { id: "v1-100", weight: "100g", price: 149, compare_price: 199, stock: 120 },
-      { id: "v1-250", weight: "250g", price: 329, compare_price: 449, stock: 80 },
-      { id: "v1-500", weight: "500g", price: 599, compare_price: 799, stock: 60 },
-      { id: "v1-1kg", weight: "1kg", price: 1099, compare_price: 1499, stock: 40 },
-    ],
-  },
-  {
-    id: "2",
-    name: "Fresh Organic Moringa Leaves",
-    slug: "fresh-organic-moringa-leaves",
-    short_description: "Daily fresh-harvested moringa leaves from our certified organic farm in Rajasthan, rich in 90+ nutrients.",
-    category: "moringa-leaves",
-    thumbnail: "/images/leaves2.png",
-    is_featured: true,
-    avg_rating: 4.8,
-    review_count: 45,
-    product_variants: [
-      { id: "v2-100", weight: "100g", price: 99, compare_price: 149, stock: 150 },
-      { id: "v2-250", weight: "250g", price: 219, compare_price: 299, stock: 100 },
-      { id: "v2-500", weight: "500g", price: 399, compare_price: 549, stock: 75 },
-      { id: "v2-1kg", weight: "1kg", price: 749, compare_price: 999, stock: 50 },
-    ],
-  },
-  {
-    id: "3",
-    name: "Fresh Moringa Drumsticks",
-    slug: "fresh-moringa-drumsticks",
-    short_description: "Tender moringa pods perfect for traditional Indian sambar, sabzi and curries. High fiber, rich in vitamins.",
-    category: "drumsticks",
-    thumbnail: "/images/drumstick2.png",
-    is_featured: false,
-    avg_rating: 4.7,
-    review_count: 38,
-    product_variants: [
-      { id: "v3-250", weight: "250g", price: 89, compare_price: 119, stock: 200 },
-      { id: "v3-500", weight: "500g", price: 169, compare_price: 219, stock: 150 },
-      { id: "v3-1kg", weight: "1kg", price: 299, compare_price: 399, stock: 100 },
-    ],
-  },
-]
 
 const CATEGORIES = [
   { value: "all", label: "All Products" },
@@ -71,25 +18,48 @@ const CATEGORIES = [
   { value: "drumsticks", label: "Drumsticks" },
 ]
 
-export default function ShopPage({
+export default async function ShopPage({
   searchParams,
 }: {
-  searchParams: { category?: string; sort?: string }
+  searchParams: Promise<{ category?: string; sort?: string }>
 }) {
-  const activeCategory = searchParams.category || "all"
-  const activeSort = searchParams.sort || "featured"
+  const resolvedSearchParams = await searchParams
+  const activeCategory = resolvedSearchParams.category || "all"
+  const activeSort = resolvedSearchParams.sort || "featured"
+  const supabase = createSimpleClient()
+  
+  let query = supabase
+    .from("products")
+    .select(`
+      *,
+      product_variants (*)
+    `)
+    .eq("is_active", true)
 
-  const filtered = PRODUCTS
-    .filter((p) => activeCategory === "all" || p.category === activeCategory)
-    .sort((a, b) => {
-      if (activeSort === "price-asc")
-        return (a.product_variants[0]?.price || 0) - (b.product_variants[0]?.price || 0)
-      if (activeSort === "price-desc")
-        return (b.product_variants[0]?.price || 0) - (a.product_variants[0]?.price || 0)
-      if (activeSort === "rating") return (b.avg_rating || 0) - (a.avg_rating || 0)
-      // featured first
-      return Number(b.is_featured) - Number(a.is_featured)
-    })
+  if (activeCategory !== "all") {
+    query = query.eq("category", activeCategory)
+  }
+
+  const { data: products, error } = await query
+
+  if (error) {
+    console.error("Error fetching products:", error)
+  }
+
+  const sortedProducts = [...(products || [])].sort((a, b) => {
+    if (activeSort === "price-asc") {
+      const priceA = Math.min(...a.product_variants.map((v: any) => v.price))
+      const priceB = Math.min(...b.product_variants.map((v: any) => v.price))
+      return priceA - priceB
+    }
+    if (activeSort === "price-desc") {
+      const priceA = Math.min(...a.product_variants.map((v: any) => v.price))
+      const priceB = Math.min(...b.product_variants.map((v: any) => v.price))
+      return priceB - priceA
+    }
+    // featured first
+    return Number(b.is_featured) - Number(a.is_featured)
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -142,16 +112,16 @@ export default function ShopPage({
         </div>
 
         {/* Count */}
-        <p className="text-sm text-gray-500 mb-6">{filtered.length} products found</p>
+        <p className="text-sm text-gray-500 mb-6">{sortedProducts.length} products found</p>
 
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((product) => (
+          {sortedProducts.map((product) => (
             <ProductCard key={product.id} product={product as any} />
           ))}
         </div>
 
-        {filtered.length === 0 && (
+        {sortedProducts.length === 0 && (
           <div className="text-center py-16">
             <p className="text-gray-500">No products found in this category.</p>
             <Link href="/shop">

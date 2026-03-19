@@ -4,16 +4,44 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Package, Plus, Search, Edit, Eye, ChevronLeft } from "lucide-react"
-
-const MOCK_PRODUCTS = [
-  { id: "1", name: "Organic Moringa Powder", category: "moringa-powder", variants: 4, minPrice: 149, maxPrice: 1099, stock: 300, active: true, featured: true },
-  { id: "2", name: "Fresh Organic Moringa Leaves", category: "moringa-leaves", variants: 4, minPrice: 99, maxPrice: 749, stock: 375, active: true, featured: true },
-  { id: "3", name: "Fresh Moringa Drumsticks", category: "drumsticks", variants: 3, minPrice: 89, maxPrice: 299, stock: 450, active: true, featured: false },
-]
+import { createAdminClient } from "@/lib/supabase/server"
+import DeleteProductButton from "@/components/admin/DeleteProductButton"
 
 export default async function AdminProductsPage() {
   const session = await auth()
-  if (!session || session.user.role !== "admin") redirect("/")
+  
+  const supabase = await createAdminClient()
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', session?.user?.id || '')
+    .single()
+
+  if (profile?.role !== "admin") redirect("/")
+
+  const { data: products, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      product_variants (*)
+    `)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching admin products:", error)
+  }
+
+  const processedProducts = (products || []).map(p => {
+    const prices = p.product_variants.map((v: any) => v.price)
+    const stock = p.product_variants.reduce((acc: number, v: any) => acc + v.stock, 0)
+    return {
+      ...p,
+      minPrice: prices.length ? Math.min(...prices) : 0,
+      maxPrice: prices.length ? Math.max(...prices) : 0,
+      totalStock: stock,
+      variantCount: p.product_variants.length
+    }
+  })
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -26,9 +54,11 @@ export default async function AdminProductsPage() {
             <Package className="h-5 w-5 text-green-700" />
             <h1 className="font-bold text-gray-900">Products</h1>
           </div>
-          <Button className="bg-green-600 hover:bg-green-700 text-white gap-2" size="sm">
-            <Plus className="h-4 w-4" /> Add Product
-          </Button>
+          <Link href="/admin/products/new">
+            <Button className="bg-green-600 hover:bg-green-700 text-white gap-2" size="sm">
+              <Plus className="h-4 w-4" /> Add Product
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -60,11 +90,11 @@ export default async function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {MOCK_PRODUCTS.map((product) => (
+                {processedProducts.map((product) => (
                   <tr key={product.id} className="hover:bg-gray-50/50 transition-colors">
                     <td className="p-4">
                       <div className="font-medium text-gray-800">{product.name}</div>
-                      {product.featured && (
+                      {product.is_featured && (
                         <span className="text-xs text-green-600">⭐ Featured</span>
                       )}
                     </td>
@@ -76,27 +106,30 @@ export default async function AdminProductsPage() {
                     <td className="p-4 text-gray-700">
                       ₹{product.minPrice} – ₹{product.maxPrice}
                     </td>
-                    <td className="p-4 text-gray-600">{product.variants} sizes</td>
+                    <td className="p-4 text-gray-600">{product.variantCount} sizes</td>
                     <td className="p-4">
-                      <span className={product.stock < 50 ? "text-orange-600 font-medium" : "text-gray-700"}>
-                        {product.stock} units
+                      <span className={product.totalStock < 50 ? "text-orange-600 font-medium" : "text-gray-700"}>
+                        {product.totalStock} units
                       </span>
                     </td>
                     <td className="p-4">
-                      <Badge className={product.active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>
-                        {product.active ? "Active" : "Inactive"}
+                      <Badge className={product.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>
+                        {product.is_active ? "Active" : "Inactive"}
                       </Badge>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link href={`/products/${product.id}`}>
+                        <Link href={`/products/${product.slug}`}>
                           <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
                             <Eye className="h-4 w-4 text-gray-400" />
                           </Button>
                         </Link>
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                          <Edit className="h-4 w-4 text-gray-400" />
-                        </Button>
+                        <Link href={`/admin/products/${product.id}/edit`}>
+                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                            <Edit className="h-4 w-4 text-gray-400" />
+                          </Button>
+                        </Link>
+                        <DeleteProductButton id={product.id} name={product.name} />
                       </div>
                     </td>
                   </tr>

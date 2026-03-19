@@ -2,11 +2,12 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, ShoppingBag, Package } from "lucide-react"
 
-export default function OrderSuccessPage({
+export default async function OrderSuccessPage({
   searchParams,
 }: {
-  searchParams: { orderId?: string }
+  searchParams: Promise<{ orderId?: string }>
 }) {
+  const resolvedSearchParams = await searchParams
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-10 max-w-md w-full text-center">
@@ -15,9 +16,9 @@ export default function OrderSuccessPage({
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Placed!</h1>
         <p className="text-gray-500 mb-1">Thank you for your order 🌿</p>
-        {searchParams.orderId && (
+        {resolvedSearchParams.orderId && (
           <p className="text-xs text-gray-400 font-mono mb-6">
-            Order ID: {searchParams.orderId.slice(0, 12)}...
+            Order ID: {resolvedSearchParams.orderId.slice(0, 12)}...
           </p>
         )}
         <p className="text-sm text-gray-600 mb-8 bg-green-50 rounded-xl p-4">

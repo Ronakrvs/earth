@@ -210,6 +210,47 @@ CREATE TABLE IF NOT EXISTS public.blog_posts (
 );
 
 -- ==========================================
+-- RECIPES TABLE
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.recipes (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  description TEXT,
+  ingredients TEXT[] DEFAULT '{}',
+  instructions TEXT[] DEFAULT '{}',
+  prep_time INTEGER, -- in minutes
+  cook_time INTEGER, -- in minutes
+  servings INTEGER,
+  difficulty TEXT CHECK (difficulty IN ('Easy', 'Medium', 'Hard')),
+  cuisine TEXT,
+  calories INTEGER,
+  tags TEXT[] DEFAULT '{}',
+  image_url TEXT,
+  rating DECIMAL(3, 2) DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ==========================================
+-- CONTACT MESSAGES TABLE
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.contact_messages (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  address TEXT,
+  message TEXT,
+  order_type TEXT,
+  products_interested JSONB DEFAULT '[]', -- List of products and quantities
+  status TEXT DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'archived')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ==========================================
 -- SEED DATA — Products
 -- ==========================================
 INSERT INTO public.products (name, slug, description, short_description, category, thumbnail, is_active, is_featured) VALUES
@@ -348,5 +389,19 @@ CREATE POLICY "b2b_admin" ON public.b2b_inquiries FOR ALL USING (
 -- Blog: published posts are public; admin manages all
 CREATE POLICY "blog_select_public" ON public.blog_posts FOR SELECT USING (is_published = true);
 CREATE POLICY "blog_admin" ON public.blog_posts FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- Recipes: publicly readable; admin manages all
+ALTER TABLE public.recipes ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "recipes_select_public" ON public.recipes FOR SELECT USING (is_active = true);
+CREATE POLICY "recipes_admin" ON public.recipes FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- Contact messages: anyone can insert; only admin can read
+ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "contact_insert_public" ON public.contact_messages FOR INSERT WITH CHECK (true);
+CREATE POLICY "contact_admin" ON public.contact_messages FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
