@@ -69,7 +69,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
-        token.role = (user as any).role || "customer"
+        
+        // If user already has a role (e.g. from Credentials authorize), use it.
+        // Otherwise (e.g. Google), fetch it from the database.
+        if ((user as any).role) {
+          token.role = (user as any).role
+        } else {
+          // Fetch from Supabase directly
+          const { createClient: createSimpleSupabase } = await import("@supabase/supabase-js")
+          const supabase = createSimpleSupabase(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          )
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single()
+          
+          token.role = profile?.role || "customer"
+        }
       }
       if (trigger === "update" && session?.user) {
         token.name = session.user.name
