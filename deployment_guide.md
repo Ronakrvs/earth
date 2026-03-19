@@ -1,6 +1,6 @@
 # Shigruvedas Deployment Guide
 
-This guide outlines the steps to deploy the Shigruvedas organic moringa store to production using Netlify and Supabase.
+This guide outlines the steps to deploy the Shigruvedas organic moringa store to production using Vercel (recommended) or Netlify, and Supabase.
 
 ## 1. Supabase Setup
 
@@ -15,9 +15,7 @@ This guide outlines the steps to deploy the Shigruvedas organic moringa store to
 2. Enable **Google** and provide your Google Client ID and Secret (from Google Cloud Console).
 3. Set the redirect URL to `https://your-app-url.netlify.app/api/auth/callback/google`.
 
-## 2. Environment Variables
-
-Add the following variables to your Netlify site settings (**Site configuration > Environment variables**):
+Add the following variables to your production site settings (Vercel: **Project Settings > Environment Variables** | Netlify: **Site configuration > Environment variables**):
 
 | Key | Description |
 |-----|-------------|
@@ -38,12 +36,20 @@ Add the following variables to your Netlify site settings (**Site configuration 
 2. Go to **Settings > API Keys** to generate your Key ID and Secret.
 3. In production, ensure you use the Live keys.
 
-## 4. Deployment to Netlify
+## 4. Deployment
 
+### Vercel (Recommended)
+1. Import your repository into [Vercel](https://vercel.com/new).
+2. During setup, expand the **Environment Variables** section.
+3. Add all the keys listed in the **Environment Variables** section above.
+4. Click **Deploy**. Next.js 15 features like `generateStaticParams` will be automatically optimized.
+
+### Netlify
 1. Connect your repository to Netlify.
-2. Netlify should automatically detect the `netlify.toml` and Next.js setup.
-3. Ensure the Build Command is `npm run build` and the Publish Directory is `.next`.
-4. Trigger a deploy.
+2. Ensure you have added the Environment Variables in the Netlify UI before the first build.
+3. Netlify should automatically detect the `netlify.toml` and Next.js setup.
+4. Ensure the Build Command is `npm run build` and the Publish Directory is `.next`.
+5. Trigger a deploy.
 
 ## 5. Admin Access
 
