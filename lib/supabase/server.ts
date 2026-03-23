@@ -60,3 +60,17 @@ export async function createAdminClient() {
     }
   )
 }
+
+// For use in generateStaticParams which runs at build time (no cookies)
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
+
+export function createAdminClientStatic() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+  if (!supabaseUrl || !serviceKey) {
+    throw new Error("Missing Supabase Admin environment variables for static client.")
+  }
+
+  return createSupabaseClient(supabaseUrl, serviceKey)
+}

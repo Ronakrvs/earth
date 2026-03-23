@@ -8,7 +8,7 @@ import {
     ArrowLeft, CheckCircle2, ListChecks, HeartPulse
 } from "lucide-react"
 
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient, createAdminClientStatic } from "@/lib/supabase/server"
 
 // Correct Recipe interface based on Supabase schema
 interface Recipe {

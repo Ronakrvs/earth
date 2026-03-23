@@ -5,11 +5,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, ChevronLeft, Leaf, ArrowRight } from "lucide-react"
 
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient, createAdminClientStatic } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 
 export async function generateStaticParams() {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClientStatic()
   const { data: posts } = await supabase
     .from('blog_posts')
     .select('slug')
