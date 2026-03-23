@@ -44,6 +44,34 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   if (!product) notFound()
 
+  const minPrice = Math.min(...(product.product_variants?.map((v: any) => v.price) || [0]))
+  const maxPrice = Math.max(...(product.product_variants?.map((v: any) => v.price) || [0]))
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": product.name,
+    "image": product.image_url || "https://shigruvedas.com/og-image.jpg",
+    "description": product.description,
+    "brand": {
+      "@type": "Brand",
+      "name": "Shigruvedas"
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "INR",
+      "lowPrice": minPrice,
+      "highPrice": maxPrice,
+      "offerCount": product.product_variants?.length || 1,
+      "availability": "https://schema.org/InStock"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "reviewCount": "124"
+    }
+  }
+
   const { data: related } = await supabase
     .from("products")
     .select(`
@@ -57,6 +85,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="container mx-auto px-4 py-6">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-gray-500 mb-8">

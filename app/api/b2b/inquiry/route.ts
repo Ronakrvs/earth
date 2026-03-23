@@ -15,25 +15,33 @@ export async function POST(req: Request) {
       message: formData.get("message"),
     }
 
+    console.log("📝 Processing B2B inquiry for:", data.company_name)
+
     // Store in Supabase
     const supabase = await createAdminClient()
-    const { error } = await supabase.from("b2b_inquiries").insert([{
+    const { error, data: insertedData } = await supabase.from("b2b_inquiries").insert([{
       company_name: data.company_name,
       contact_name: data.contact_name,
       email: data.email,
       phone: data.phone,
-      business_type: data.business_type,
-      products_interested: [data.products],
-      monthly_quantity: data.monthly_quantity,
-      message: data.message,
-    }])
+      business_type: data.business_type || null,
+      products_interested: data.products ? [data.products] : [],
+      monthly_quantity: data.monthly_quantity || null,
+      message: data.message || null,
+      status: 'new'
+    }]).select()
 
-    if (error) throw error
+    if (error) {
+      console.error("❌ Supabase insertion error:", error)
+      throw error
+    }
+
+    console.log("✅ B2B inquiry stored successfully:", insertedData?.[0]?.id)
 
     // Redirect to thank you message
     return NextResponse.redirect(new URL("/b2b?submitted=true", req.url))
-  } catch (error) {
-    console.error("B2B inquiry error:", error)
+  } catch (error: any) {
+    console.error("🚨 B2B inquiry submission failed:", error.message || error)
     return NextResponse.redirect(new URL("/b2b?error=true", req.url))
   }
 }

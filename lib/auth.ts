@@ -69,30 +69,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
-        
-        // If user already has a role (e.g. from Credentials authorize), use it.
-        // Otherwise (e.g. Google), fetch it from the database.
-        if ((user as any).role) {
-          token.role = (user as any).role
-        } else {
-          // Fetch from Supabase directly
-          const { createClient: createSimpleSupabase } = await import("@supabase/supabase-js")
-          const supabase = createSimpleSupabase(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-          )
-          const { data: profile } = await supabase
-            .from("profiles")
-            .select("role")
-            .eq("id", user.id)
-            .single()
-          
-          token.role = profile?.role || "customer"
-        }
+        token.role = (user as any).role || "customer"
       }
-      if (trigger === "update" && session?.user) {
-        token.name = session.user.name
-        token.image = session.user.image
+      
+      if (trigger === "update" && session?.user?.role) {
         token.role = session.user.role
       }
       return token
@@ -100,7 +80,40 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
-        session.user.role = (token.role as string) || "customer"
+        
+        // Fetch latest role directly from Supabase to ensure real-time updates
+        // even if the JWT itself is stale.
+        try {
+          const { createClient: createSimpleSupabase } = await import("@supabase/supabase-js")
+          
+          // Use service role key to bypass RLS in server-side session callback
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+          
+          if (supabaseUrl && serviceKey) {
+            const supabase = createSimpleSupabase(supabaseUrl, serviceKey)
+            const { data: profile, error } = await supabase
+              .from("profiles")
+              .select("role")
+              .eq("id", token.id)
+              .maybeSingle()
+            
+            if (error) {
+              console.error("[auth] dynamic role fetch error:", error.message)
+            }
+            
+            if (profile?.role) {
+              session.user.role = profile.role
+            } else {
+              session.user.role = (token.role as string) || "customer"
+            }
+          } else {
+            session.user.role = (token.role as string) || "customer"
+          }
+        } catch (error) {
+          console.error("Error fetching role for session:", error)
+          session.user.role = (token.role as string) || "customer"
+        }
       }
       return session
     },

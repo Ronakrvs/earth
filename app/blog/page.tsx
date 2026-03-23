@@ -4,6 +4,7 @@ import Image from "next/image"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, ArrowRight, Leaf, Search, TrendingUp, Utensils, Sparkles, Sprout } from "lucide-react"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
   title: "Moringa Health Blog — Recipes, Tips & Research | Shigruvedas",
@@ -17,84 +18,31 @@ const CATEGORIES = [
   { label: "Farm Life", value: "farm", icon: Sprout },
 ]
 
-const POSTS = [
-  {
-    slug: "health-benefits-moringa-powder",
-    title: "7 Science-Backed Health Benefits of Moringa Powder",
-    excerpt: "Moringa oleifera is one of the most nutrient-dense plants on earth. Here's what research says about its incredible benefits — from blood sugar control to anti-inflammation.",
-    category: "Health & Wellness",
-    readTime: "5 min",
-    date: "Feb 20, 2025",
-    image: "/images/powder2.png",
-    featured: true,
-    tag: "Must Read",
-    tagColor: "bg-amber-500",
-  },
-  {
-    slug: "moringa-smoothie-recipes",
-    title: "5 Delicious Moringa Smoothie Recipes to Start Your Day",
-    excerpt: "These 5 smoothie recipes use moringa powder to pack a nutritional punch while tasting amazing.",
-    category: "Recipes",
-    readTime: "4 min",
-    date: "Feb 10, 2025",
-    image: "/images/leaves2.png",
-    featured: false,
-    tag: "Recipe",
-    tagColor: "bg-blue-500",
-  },
-  {
-    slug: "moringa-for-skin-hair",
-    title: "Moringa for Skin & Hair: The Ultimate Natural Beauty Hack",
-    excerpt: "Rich in vitamins A, C, and E plus amino acids, moringa is a powerhouse for naturally glowing skin and stronger hair.",
-    category: "Health & Wellness",
-    readTime: "6 min",
-    date: "Jan 28, 2025",
-    image: "/images/powder2.png",
-    featured: false,
-    tag: "Beauty",
-    tagColor: "bg-pink-500",
-  },
-  {
-    slug: "organic-farming-udaipur",
-    title: "Inside Our Organic Farm: How We Grow the Cleanest Moringa",
-    excerpt: "A behind-the-scenes look at our 7+ acre certified organic moringa farm in Udaipur, Rajasthan.",
-    category: "Farm Life",
-    readTime: "7 min",
-    date: "Jan 15, 2025",
-    image: "/images/drumstick2.png",
-    featured: false,
-    tag: "Farm Story",
-    tagColor: "bg-green-600",
-  },
-  {
-    slug: "moringa-sambar-recipe",
-    title: "Authentic South Indian Moringa Sambar — Grandma's Recipe",
-    excerpt: "Moringa drumsticks are a staple in South Indian cooking. This sambar recipe has been passed through generations.",
-    category: "Recipes",
-    readTime: "8 min",
-    date: "Jan 5, 2025",
-    image: "/images/drumstick2.png",
-    featured: false,
-    tag: "Recipe",
-    tagColor: "bg-blue-500",
-  },
-  {
-    slug: "moringa-vs-spirulina",
-    title: "Moringa vs Spirulina: Which Superfood is Right for You?",
-    excerpt: "Both are celebrated superfoods with very different nutritional profiles. We break down the science.",
-    category: "Health & Wellness",
-    readTime: "6 min",
-    date: "Dec 22, 2024",
-    image: "/images/leaves2.png",
-    featured: false,
-    tag: "Research",
-    tagColor: "bg-purple-500",
-  },
-]
+export default async function BlogPage() {
+  const supabase = await createAdminClient()
+  
+  const { data: posts, error } = await supabase
+    .from('blog_posts')
+    .select('*')
+    .eq('is_published', true)
+    .order('created_at', { ascending: false })
 
-export default function BlogPage() {
-  const featured = POSTS.find((p) => p.featured)!
-  const rest = POSTS.filter((p) => !p.featured)
+  if (error) {
+    console.error("Error fetching blog posts:", error)
+  }
+
+  const formattedPosts = (posts || []).map(post => ({
+    ...post,
+    category: post.tags?.[0] || "General",
+    tag: post.tags?.[1] || "Article",
+    tagColor: "bg-green-600",
+    readTime: `${Math.max(1, Math.ceil(post.content.split(" ").length / 200))} min`,
+    date: new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+    image: post.cover_image || "/images/powder2.png"
+  }))
+
+  const featured = formattedPosts[0]
+  const rest = formattedPosts.slice(1)
 
   return (
     <div className="min-h-screen bg-white">
@@ -144,75 +92,85 @@ export default function BlogPage() {
       </div>
 
       <div className="container mx-auto max-w-5xl px-4 py-12">
-        {/* Featured article */}
-        <Link href={`/blog/${featured.slug}`} className="group block mb-14">
-          <div className="grid md:grid-cols-5 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden">
-            <div className="md:col-span-2 aspect-video md:aspect-auto bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
-              <Image
-                src={featured.image}
-                alt={featured.title}
-                width={500}
-                height={400}
-                className="w-full h-full object-contain p-8 group-hover:scale-105 transition-transform duration-500"
-              />
-            </div>
-            <div className="md:col-span-3 p-6 md:p-10 flex flex-col justify-center">
-              <div className="flex items-center gap-2 mb-4">
-                <span className={`${featured.tagColor} text-white text-xs font-bold px-3 py-1 rounded-full`}>
-                  {featured.tag}
-                </span>
-                <Badge className="bg-green-100 text-green-700">{featured.category}</Badge>
-              </div>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-green-700 transition-colors leading-tight">
-                {featured.title}
-              </h2>
-              <p className="text-gray-500 text-sm leading-relaxed mb-5">{featured.excerpt}</p>
-              <div className="flex items-center gap-4 text-xs text-gray-400 mb-5">
-                <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {featured.date}</span>
-                <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {featured.readTime} read</span>
-              </div>
-              <span className="inline-flex items-center gap-2 bg-green-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl group-hover:bg-green-700 transition-colors w-fit">
-                Read Article <ArrowRight className="h-4 w-4" />
-              </span>
-            </div>
+        {formattedPosts.length === 0 ? (
+          <div className="text-center py-20">
+            <Leaf className="h-12 w-12 text-gray-200 mx-auto mb-4" />
+            <p className="text-gray-500">No articles found. Check back soon!</p>
           </div>
-        </Link>
-
-        {/* Grid */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-extrabold text-gray-900">Latest Articles</h2>
-          <span className="text-sm text-gray-400">{rest.length} articles</span>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {rest.map((post) => (
-            <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
-              <div className="bg-white rounded-3xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-lg transition-all overflow-hidden h-full flex flex-col">
-                <div className="relative aspect-[4/3] bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
-                  <Image
-                    src={post.image}
-                    alt={post.title}
-                    fill
-                    className="object-contain p-6 group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <span className={`absolute top-3 left-3 ${post.tagColor} text-white text-xs font-bold px-2.5 py-1 rounded-full`}>
-                    {post.tag}
-                  </span>
-                </div>
-                <div className="p-5 flex flex-col flex-1">
-                  <p className="text-xs text-green-600 font-medium mb-1">{post.category}</p>
-                  <h3 className="font-bold text-gray-900 text-sm group-hover:text-green-700 transition-colors mb-2 line-clamp-2 leading-snug flex-1">
-                    {post.title}
-                  </h3>
-                  <p className="text-xs text-gray-500 line-clamp-2 mb-4">{post.excerpt}</p>
-                  <div className="flex items-center justify-between text-xs text-gray-400 mt-auto">
-                    <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {post.date}</span>
-                    <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {post.readTime}</span>
+        ) : (
+          <>
+            {/* Featured article */}
+            {featured && (
+              <Link href={`/blog/${featured.slug}`} className="group block mb-14">
+                <div className="grid md:grid-cols-5 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden">
+                  <div className="md:col-span-2 aspect-video md:aspect-auto bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden relative">
+                    <Image
+                      src={featured.image}
+                      alt={featured.title}
+                      fill
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="md:col-span-3 p-6 md:p-10 flex flex-col justify-center">
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className={`${featured.tagColor} text-white text-xs font-bold px-3 py-1 rounded-full capitalize`}>
+                        {featured.tag}
+                      </span>
+                      <Badge className="bg-green-100 text-green-700 capitalize">{featured.category}</Badge>
+                    </div>
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-green-700 transition-colors leading-tight">
+                      {featured.title}
+                    </h2>
+                    <p className="text-gray-500 text-sm leading-relaxed mb-5">{featured.excerpt}</p>
+                    <div className="flex items-center gap-4 text-xs text-gray-400 mb-5">
+                      <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {featured.date}</span>
+                      <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {featured.readTime} read</span>
+                    </div>
+                    <span className="inline-flex items-center gap-2 bg-green-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl group-hover:bg-green-700 transition-colors w-fit">
+                      Read Article <ArrowRight className="h-4 w-4" />
+                    </span>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
-        </div>
+              </Link>
+            )}
+
+            {/* Grid */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-extrabold text-gray-900">Latest Articles</h2>
+              <span className="text-sm text-gray-400">{rest.length} articles</span>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {rest.map((post) => (
+                <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
+                  <div className="bg-white rounded-3xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-lg transition-all overflow-hidden h-full flex flex-col">
+                    <div className="relative aspect-[4/3] bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
+                      <Image
+                        src={post.image}
+                        alt={post.title}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <span className={`absolute top-3 left-3 ${post.tagColor} text-white text-xs font-bold px-2.5 py-1 rounded-full capitalize`}>
+                        {post.tag}
+                      </span>
+                    </div>
+                    <div className="p-5 flex flex-col flex-1">
+                      <p className="text-xs text-green-600 font-medium mb-1 capitalize">{post.category}</p>
+                      <h3 className="font-bold text-gray-900 text-sm group-hover:text-green-700 transition-colors mb-2 line-clamp-2 leading-snug flex-1">
+                        {post.title}
+                      </h3>
+                      <p className="text-xs text-gray-500 line-clamp-2 mb-4">{post.excerpt}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-400 mt-auto">
+                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {post.date}</span>
+                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {post.readTime}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Newsletter */}
         <div className="mt-16 bg-gradient-to-br from-green-700 to-emerald-600 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">

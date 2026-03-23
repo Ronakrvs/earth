@@ -43,7 +43,7 @@ export default async function ShopPage({
   const { data: products, error } = await query
 
   if (error) {
-    console.error("Error fetching products:", error)
+    console.error("Error fetching products:", JSON.stringify(error, null, 2))
   }
 
   const sortedProducts = [...(products || [])].sort((a, b) => {

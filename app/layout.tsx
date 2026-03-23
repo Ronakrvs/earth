@@ -15,53 +15,41 @@ const inter = Inter({
   variable: '--font-inter'
 })
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-}
-
 export const metadata: Metadata = {
+  metadataBase: new URL('https://shigruvedas.com'),
   title: {
     default: "Shigruvedas - Organic Moringa Farm | Fresh Leaves, Powder & Drumsticks",
-    template: "%s | Shigruvedas - Organic Moringa Farm"
+    template: "%s | Shigruvedas"
   },
   description: "Premium organic moringa products directly from our farm in India. Fresh moringa leaves, pure powder, drumsticks & seeds. Wholesale & retail. Chemical-free farming. Nutrition from Earth to Wellness.",
   keywords: [
-    "organic moringa",
-    "moringa farming", 
-    "moringa leaves",
-    "moringa powder",
-    "drumsticks",
-    "moringa seeds",
-    "organic farming",
-    "wholesale moringa",
-    "fresh moringa",
-    "shigruvedas",
-    "moringa supplier India",
-    "bulk moringa orders"
+    "organic moringa India",
+    "moringa farming Rajasthan", 
+    "moringa leaves benefits",
+    "pure moringa powder",
+    "fresh drumsticks online",
+    "organic moringa seeds",
+    "wholesale moringa supplier",
+    "shigruvedas organic",
+    "buy moringa powder India"
   ],
   authors: [{ name: "Shigruvedas Organic Farm" }],
   creator: "Shigruvedas",
   publisher: "Shigruvedas",
-  applicationName: "Shigruvedas",
-  generator: "Next.js",
-  category: "Agriculture",
-  classification: "Organic Farming",
   
   // Open Graph
   openGraph: {
     type: "website",
-    siteName: "Shigruvedas - Organic Moringa Farm",
+    siteName: "Shigruvedas",
     title: "Shigruvedas - Premium Organic Moringa Products",
     description: "Fresh organic moringa leaves, powder & drumsticks directly from our farm. Wholesale & retail orders available.",
     url: "https://shigruvedas.com",
     images: [
       {
-        url: "/og-image.jpg", // Add this image to your public folder
+        url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "Shigruvedas Organic Moringa Farm - Fresh leaves and powder",
+        alt: "Shigruvedas Organic Moringa Farm",
       }
     ],
     locale: "en_IN",
@@ -70,11 +58,9 @@ export const metadata: Metadata = {
   // Twitter Cards
   twitter: {
     card: "summary_large_image",
-    site: "@shigruvedas", // Add your Twitter handle
-    creator: "@shigruvedas",
     title: "Shigruvedas - Organic Moringa Farm",
     description: "Premium organic moringa products from our farm. Fresh leaves, powder & drumsticks.",
-    images: ["/twitter-image.jpg"], // Add this image to your public folder
+    images: ["/twitter-image.jpg"],
   },
 
   // Additional SEO
@@ -90,31 +76,9 @@ export const metadata: Metadata = {
     },
   },
 
-  // Verification (add these once you get them)
-  verification: {
-    // google: 'your-google-verification-code',
-    // bing: 'your-bing-verification-code',
-  },
-
-  // Alternate languages if you plan to add them
   alternates: {
     canonical: "https://shigruvedas.com",
-    languages: {
-      'en-IN': 'https://shigruvedas.com',
-      // 'hi-IN': 'https://shigruvedas.com/hi', // If you add Hindi
-    },
   },
-
-  // Additional metadata
-  other: {
-    'contact:email': 'shigruvedas@gmail.com',
-    'contact:phone_number': '+91-7877255595',
-    'business:contact_data:street_address': '248, A-Block, hiran magri',
-    'business:contact_data:locality': 'Udaipur',
-    'business:contact_data:region': 'Rajasthan',
-    'business:contact_data:postal_code': '313002',
-    'business:contact_data:country_name': 'India',
-  }
 }
 
 export default function RootLayout({
@@ -155,7 +119,7 @@ export default function RootLayout({
               "alternateName": "Shigruvedas",
               "description": "Premium organic moringa products directly from our certified organic farm in Rajasthan. Fresh moringa leaves, powder, and drumsticks with free delivery.",
               "url": "https://shigruvedas.com",
-              "telephone": "+91-7877255595",
+              "telephone": "+91-9166599895",
               "email": "shigruvedas@gmail.com",
               "logo": "https://shigruvedas.com/logo.png",
               "image": "https://shigruvedas.com/moringa-farm.jpg",
@@ -174,11 +138,11 @@ export default function RootLayout({
               },
               "openingHours": "Mo-Sa 08:00-19:00, Su 09:00-17:00",
               "sameAs": [
-                "https://wa.me/917877255595"
+                "https://wa.me/9166599895"
               ],
               "contactPoint": {
                 "@type": "ContactPoint",
-                "telephone": "+91-7877255595",
+                "telephone": "+91-9166599895",
                 "contactType": "customer service",
                 "availableLanguage": ["English", "Hindi"],
                 "areaServed": "IN"
@@ -271,13 +235,13 @@ export default function RootLayout({
               },
               "contactPoint": {
                 "@type": "ContactPoint",
-                "telephone": "+91-7877255595",
+                "telephone": "+91-9166599895",
                 "email": "shigruvedas@gmail.com",
                 "contactType": "customer service",
                 "availableLanguage": ["English", "Hindi"]
               },
               "sameAs": [
-                "https://wa.me/917877255595"
+                "https://wa.me/9166599895"
               ]
             })
           }}

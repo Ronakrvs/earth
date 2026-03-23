@@ -1,12 +1,11 @@
 import type { Metadata } from "next"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
-    Building2, CheckCircle2, Users, Phone, Mail,
+    Building2, CheckCircle2, Users, Phone,
     TrendingDown, Package, Star, ArrowRight
 } from "lucide-react"
+import { B2BForm, B2BInquiryStatus } from "./B2BClient"
 
 export const metadata: Metadata = {
   title: "B2B Wholesale Moringa | Shigruvedas",
@@ -25,7 +24,7 @@ export default function B2BPage() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <section className="bg-gradient-to-br from-green-900 via-green-800 to-emerald-700 text-white pt-16 pb-20 px-4">
+      <section className="bg-gradient-to-br from-green-950 via-green-900 to-emerald-800 text-white pt-16 pb-20 px-4">
         <div className="container mx-auto max-w-5xl text-center">
           <Badge className="bg-white/20 text-white border-white/30 mb-4">B2B Wholesale Program</Badge>
           <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
@@ -48,9 +47,9 @@ export default function B2BPage() {
                 Submit B2B Inquiry <ArrowRight className="h-4 w-4" />
               </Button>
             </a>
-            <a href="tel:+917877255595">
+            <a href="tel:+9166599895">
               <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2">
-                <Phone className="h-4 w-4" /> Call +91 7877255595
+                <Phone className="h-4 w-4" /> Call +91 9166599895
               </Button>
             </a>
           </div>
@@ -154,73 +153,8 @@ export default function B2BPage() {
           <B2BForm />
         </div>
       </section>
+      
+      <B2BInquiryStatus />
     </div>
-  )
-}
-
-// Inline client component for the form
-function B2BForm() {
-  // Server-rendered placeholder — form submits to API
-  return (
-    <form action="/api/b2b/inquiry" method="POST" className="bg-gray-50 rounded-2xl border border-gray-200 p-8 space-y-5">
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <Label>Company Name *</Label>
-          <Input name="company_name" placeholder="Wellness Co. Ltd." className="mt-1 bg-white" required />
-        </div>
-        <div>
-          <Label>Contact Name *</Label>
-          <Input name="contact_name" placeholder="Ronak Sharma" className="mt-1 bg-white" required />
-        </div>
-      </div>
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <Label>Email Address *</Label>
-          <Input name="email" type="email" placeholder="you@company.com" className="mt-1 bg-white" required />
-        </div>
-        <div>
-          <Label>Phone Number *</Label>
-          <Input name="phone" placeholder="+91 98765 43210" className="mt-1 bg-white" required />
-        </div>
-      </div>
-      <div>
-        <Label>Business Type</Label>
-        <select name="business_type" className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-300">
-          <option value="">Select business type</option>
-          <option value="retailer">Retailer / Distributor</option>
-          <option value="restaurant">Restaurant / Food Service</option>
-          <option value="health_store">Health Food Store</option>
-          <option value="clinic">Ayurvedic / Wellness Clinic</option>
-          <option value="exporter">Exporter</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <Label>Products Interested In</Label>
-          <Input name="products" placeholder="e.g., Moringa Powder, Leaves" className="mt-1 bg-white" />
-        </div>
-        <div>
-          <Label>Monthly Quantity Needed</Label>
-          <Input name="monthly_quantity" placeholder="e.g., 50 kg / month" className="mt-1 bg-white" />
-        </div>
-      </div>
-      <div>
-        <Label>Additional Message</Label>
-        <textarea
-          name="message"
-          rows={4}
-          placeholder="Tell us about your business requirements, custom packaging needs, etc."
-          className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-green-300 resize-none"
-        />
-      </div>
-      <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white h-11 gap-2">
-        <Mail className="h-4 w-4" /> Submit Inquiry
-      </Button>
-      <p className="text-xs text-center text-gray-400">
-        We respond within 24 hours. You can also call/WhatsApp us at{" "}
-        <a href="tel:+917877255595" className="text-green-600">+91 7877255595</a>
-      </p>
-    </form>
   )
 }

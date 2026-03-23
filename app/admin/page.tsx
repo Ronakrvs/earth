@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import {
   Package, Users, ShoppingBag, TrendingUp,
   AlertTriangle, BarChart3, Settings, ChevronRight,
-  Leaf, ArrowUpRight
+  Leaf, ArrowUpRight, Star, BookOpen, UtensilsCrossed
 } from "lucide-react"
 
 export default async function AdminDashboard() {
@@ -32,12 +32,15 @@ console.log("prod",profile)
   ]
 
   const quickLinks = [
-    { label: "Manage Products", description: "Add, edit, delete products & variants", href: "/admin/products", icon: ShoppingBag },
-    { label: "All Orders", description: "View and update order statuses", href: "/admin/orders", icon: Package },
-    { label: "User Management", description: "View users, manage roles", href: "/admin/users", icon: Users },
-    { label: "Inventory", description: "Monitor and update stock levels", href: "/admin/inventory", icon: AlertTriangle },
-    { label: "B2B Inquiries", description: "Review bulk order requests", href: "/admin/b2b", icon: ArrowUpRight },
-    { label: "Analytics", description: "Sales reports and insights", href: "/admin/analytics", icon: BarChart3 },
+    { label: "Manage Products", description: "Add, edit, delete products & variants", href: "/admin/products", icon: ShoppingBag, color: "text-amber-600", bg: "bg-amber-50" },
+    { label: "All Orders", description: "View and update order statuses", href: "/admin/orders", icon: Package, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: "User Management", description: "View users, manage roles", href: "/admin/users", icon: Users, color: "text-purple-600", bg: "bg-purple-50" },
+    { label: "Inventory", description: "Monitor and update stock levels", href: "/admin/inventory", icon: AlertTriangle, color: "text-red-600", bg: "bg-red-50" },
+    { label: "B2B Inquiries", description: "Review bulk order requests", href: "/admin/b2b", icon: ArrowUpRight, color: "text-indigo-600", bg: "bg-indigo-50" },
+    { label: "Ratings & Reviews", description: "Moderate product feedback", href: "/admin/reviews", icon: Star, color: "text-yellow-600", bg: "bg-yellow-50" },
+    { label: "Blog Posts", description: "Create and manage blog content", href: "/admin/blog", icon: BookOpen, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: "Recipe Hub", description: "Manage culinary recipes & tips", href: "/admin/recipes", icon: UtensilsCrossed, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: "Analytics", description: "Sales reports and insights", href: "/admin/analytics", icon: BarChart3, color: "text-pink-600", bg: "bg-pink-50" },
   ]
 
   return (

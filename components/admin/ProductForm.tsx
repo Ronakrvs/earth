@@ -29,6 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Trash2, Plus, ArrowLeft, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { toast } from "sonner"
+import ImageUpload from "./ImageUpload"
 
 const productSchema = z.object({
   name: z.string().min(2, "Name is required"),
@@ -40,8 +41,8 @@ const productSchema = z.object({
   images: z.array(z.string()).default([]),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
-  meta_title: z.string().optional(),
-  meta_description: z.string().optional(),
+  meta_title: z.string().nullish().or(z.literal("")),
+  meta_description: z.string().nullish().or(z.literal("")),
   variants: z.array(z.object({
     id: z.string().optional(),
     weight: z.string().min(1, "Weight is required"),
@@ -76,6 +77,8 @@ export default function ProductForm({ initialData }: ProductFormProps) {
     is_featured: false,
     variants: [{ weight: "", price: 0, stock: 0, is_active: true }],
     images: [],
+    meta_title: "",
+    meta_description: "",
   }
 
   const form = useForm<ProductFormValues>({
@@ -344,9 +347,13 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                   name="thumbnail"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Thumbnail URL</FormLabel>
+                      <FormLabel>Product Thumbnail</FormLabel>
                       <FormControl>
-                        <Input placeholder="/images/example.png" {...field} />
+                        <ImageUpload 
+                          value={field.value || ""} 
+                          onChange={field.onChange}
+                          disabled={loading}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -367,8 +374,9 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                     <FormItem>
                       <FormLabel>Meta Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="SEO Title" {...field} />
+                        <Input placeholder="SEO Title" {...field} value={field.value || ""} />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -379,8 +387,9 @@ export default function ProductForm({ initialData }: ProductFormProps) {
                     <FormItem>
                       <FormLabel>Meta Description</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="SEO Meta Description" {...field} />
+                        <Textarea placeholder="SEO Meta Description" {...field} value={field.value || ""} />
                       </FormControl>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />

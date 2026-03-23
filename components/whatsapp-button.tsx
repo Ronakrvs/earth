@@ -18,7 +18,7 @@ interface WhatsAppButtonProps {
 
 export default function WhatsAppButton({
   message = "Hi! I'm interested in your organic moringa products. Can you help me?",
-  phoneNumber = "917877255595", // Default phone number (replace with actual)
+  phoneNumber = "9166599895", // Primary contact
   className,
   variant = "default",
   size = "sm",

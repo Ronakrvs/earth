@@ -177,14 +177,24 @@ export default function Footer() {
                 </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-green-300 flex-shrink-0" />
-                <Link 
-                  href="tel:+917877255595" 
-                  className="text-green-100 hover:text-white transition-colors duration-200"
-                >
-                  +91 7877255595
-                </Link>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-green-300 flex-shrink-0" />
+                  <Link 
+                    href="tel:+9166599895" 
+                    className="text-green-100 font-bold hover:text-white transition-colors duration-200"
+                  >
+                    +91 9166599895
+                  </Link>
+                </div>
+                <div className="flex items-center gap-2 ps-6 opacity-80">
+                  <Link 
+                    href="tel:+917877255595" 
+                    className="text-green-100 text-xs hover:text-white transition-colors duration-200"
+                  >
+                    +91 7877255595
+                  </Link>
+                </div>
               </div>
               
               <div className="flex items-center gap-2">
@@ -288,7 +298,7 @@ export default function Footer() {
             "sameAs": socialLinks.map(link => link.url),
             "contactPoint": {
               "@type": "ContactPoint",
-              "telephone": "+91-7877255595",
+              "telephone": "+91-9166599895",
               "contactType": "customer service",
               "email": "shigruvedas@gmail.com",
               "availableLanguage": ["English", "Hindi"]

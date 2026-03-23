@@ -7,6 +7,7 @@ import {
     ArrowRight, Leaf, Shield, Truck, Star, CheckCircle2, Zap, Heart, Phone, ChevronRight
 } from "lucide-react"
 import { createSimpleClient } from "@/lib/supabase/client"
+import { createAdminClient } from "@/lib/supabase/server"
 
 export const metadata: Metadata = {
   title: "Organic Moringa Products — Fresh from Rajasthan Farm | Shigruvedas",
@@ -36,6 +37,23 @@ async function getFeaturedProducts() {
     image: p.thumbnail,
     badge: p.category.replace("-", " "),
     badgeColor: "bg-green-600",
+  }))
+}
+
+async function getBlogPosts() {
+  const supabase = await createAdminClient()
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("*")
+    .eq("is_published", true)
+    .order("created_at", { ascending: false })
+    .limit(3)
+    
+  return (data || []).map((post: any) => ({
+    slug: post.slug,
+    title: post.title,
+    cat: post.tags?.[0] || "General",
+    image: post.cover_image || "/images/powder2.png"
   }))
 }
 
@@ -88,8 +106,26 @@ const BENEFITS = [
 
 export default async function HomePage() {
   const products = await getFeaturedProducts()
+  const blogPosts = await getBlogPosts()
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Shigruvedas",
+    "url": "https://shigruvedas.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://shigruvedas.com/shop?query={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <div className="min-h-screen bg-white">
       {/* ─── HERO ─────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-green-950 via-green-900 to-emerald-800 text-white">
         {/* Decorative blobs */}
@@ -370,7 +406,7 @@ export default async function HomePage() {
                 Explore B2B Plans
               </Button>
             </Link>
-            <a href="tel:+917877255595">
+            <a href="tel:+919166599895">
               <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2">
                 <Phone className="h-4 w-4" /> Call Us
               </Button>
@@ -392,18 +428,14 @@ export default async function HomePage() {
             </Link>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { slug: "health-benefits-moringa-powder", title: "7 Science-Backed Health Benefits of Moringa", cat: "Health", image: "/images/powder2.png" },
-              { slug: "moringa-smoothie-recipes", title: "5 Delicious Moringa Smoothie Recipes", cat: "Recipes", image: "/images/leaves2.png" },
-              { slug: "moringa-sambar-recipe", title: "Authentic South Indian Moringa Sambar", cat: "Recipes", image: "/images/drumstick2.png" },
-            ].map((post) => (
+            {blogPosts.map((post) => (
               <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
                 <div className="bg-white rounded-2xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
-                  <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
-                    <Image src={post.image} alt={post.title} width={400} height={225} className="w-full h-full object-contain p-6 group-hover:scale-105 transition-transform duration-500" />
+                  <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden relative">
+                    <Image src={post.image} alt={post.title} fill className="w-full h-full object-cover p-0 group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-5">
-                    <Badge className="bg-green-100 text-green-700 text-xs mb-2">{post.cat}</Badge>
+                    <Badge className="bg-green-100 text-green-700 text-xs mb-2 capitalize">{post.cat}</Badge>
                     <h3 className="font-bold text-gray-900 text-sm group-hover:text-green-700 transition-colors line-clamp-2">{post.title}</h3>
                     <span className="flex items-center gap-1 text-green-600 text-xs font-medium mt-3 group-hover:gap-2 transition-all">
                       Read more <ChevronRight className="h-3.5 w-3.5" />
@@ -435,7 +467,7 @@ export default async function HomePage() {
                 Shop Now — Free Delivery <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <a href="https://wa.me/917877255595" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/9166599895" target="_blank" rel="noopener noreferrer">
               <Button size="lg" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 gap-2">
                 Chat on WhatsApp
               </Button>
@@ -444,5 +476,6 @@ export default async function HomePage() {
         </div>
       </section>
     </div>
+    </>
   )
 }
