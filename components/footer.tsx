@@ -1,9 +1,7 @@
-import { Button } from "@/components/ui/button"
-import { Separator } from "@/components/ui/separator"
-import { Phone, Mail, MapPin, Clock, Facebook, Instagram, Leaf } from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
-import WhatsAppButton from "@/components/whatsapp-button"
+import { Button } from "@/components/ui/button";
+import { Phone, Mail, MapPin, Facebook, Instagram, Leaf } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -43,7 +41,7 @@ export default function Footer() {
   ];
 
   return (
-    <footer className="relative bg-slate-900 pt-32 pb-12 overflow-hidden text-white">
+    <footer className="relative bg-background pt-32 pb-12 overflow-hidden text-foreground border-t border-border/50">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-30" />
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2" />
@@ -53,12 +51,12 @@ export default function Footer() {
           {/* Brand & Mission */}
           <div className="lg:col-span-4">
             <Link href="/" className="inline-flex items-center gap-4 mb-8 group">
-              <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
+              <div className="h-12 w-12 rounded-2xl bg-card/70 flex items-center justify-center group-hover:bg-primary/20 transition-all duration-500">
                 <Image src="/images/logo.png" alt="Logo" width={32} height={32} />
               </div>
               <span className="text-2xl font-black tracking-tighter">SHIGRUVEDAS</span>
             </Link>
-            <p className="text-slate-400 text-lg leading-relaxed mb-10 max-w-sm">
+            <p className="text-muted-foreground text-lg leading-relaxed mb-10 max-w-sm">
               Cultivating the "Miracle Tree" with ancestral wisdom and modern precision. Pure, organic, and direct from our sun-drenched Rajasthan farm.
             </p>
             <div className="flex gap-4">
@@ -70,7 +68,7 @@ export default function Footer() {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center text-slate-400 hover:bg-primary hover:text-white transition-all duration-300 transform hover:-translate-y-1"
+                    className="h-12 w-12 rounded-2xl bg-card/70 flex items-center justify-center text-muted-foreground hover:bg-primary hover:text-white transition-all duration-300 transform hover:-translate-y-1"
                     aria-label={social.name}
                   >
                     <IconComponent className="h-5 w-5" />
@@ -93,7 +91,7 @@ export default function Footer() {
                   { n: "Blog Journal", h: "/blog" },
                 ].map((l) => (
                   <li key={l.n}>
-                    <Link href={l.h} className="text-slate-400 hover:text-primary font-bold transition-colors">
+                    <Link href={l.h} className="text-muted-foreground hover:text-primary font-bold transition-colors">
                       {l.n}
                     </Link>
                   </li>
@@ -108,10 +106,10 @@ export default function Footer() {
                   { n: "Shipping", h: "/shipping" },
                   { n: "Bulk Orders", h: "/bulk" },
                   { n: "Farm Visit", h: "/farm-visit" },
-                  { n: "Return Policy", h: "/returns" },
+                  // { n: "Return Policy", h: "/returns" },
                 ].map((l) => (
                   <li key={l.n}>
-                    <Link href={l.h} className="text-slate-400 hover:text-primary font-bold transition-colors">
+                    <Link href={l.h} className="text-muted-foreground hover:text-primary font-bold transition-colors">
                       {l.n}
                     </Link>
                   </li>
@@ -125,30 +123,30 @@ export default function Footer() {
             <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-8">Reach Out</h4>
             <div className="space-y-6">
               <div className="flex items-start gap-4">
-                <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-card/70 flex items-center justify-center flex-shrink-0">
                   <MapPin className="h-5 w-5 text-primary" />
                 </div>
-                <p className="text-slate-400 font-medium leading-relaxed">
+                <p className="text-muted-foreground font-medium leading-relaxed">
                   248, A-Block, Hiran Magri<br />
                   Udaipur, Rajasthan 313002
                 </p>
               </div>
               
               <div className="flex items-center gap-4 group">
-                <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-all">
+                <div className="h-10 w-10 rounded-xl bg-card/70 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-all">
                   <Phone className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <Link href="tel:+919166599895" className="block text-lg font-black text-white hover:text-primary transition-colors">+91 9166599895</Link>
-                  <Link href="tel:+917877255595" className="block text-sm font-bold text-slate-500 hover:text-white transition-colors">+91 7877255595</Link>
+                  <Link href="tel:+919166599895" className="block text-lg font-black text-foreground hover:text-primary transition-colors">+91 9166599895</Link>
+                  <Link href="tel:+917877255595" className="block text-sm font-bold text-muted-foreground hover:text-foreground transition-colors">+91 7877255595</Link>
                 </div>
               </div>
 
               <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
+                <div className="h-10 w-10 rounded-xl bg-card/70 flex items-center justify-center flex-shrink-0">
                   <Mail className="h-5 w-5 text-primary" />
                 </div>
-                <Link href="mailto:shigruvedas@gmail.com" className="text-slate-400 font-bold hover:text-white transition-colors">
+                <Link href="mailto:shigruvedas@gmail.com" className="text-muted-foreground font-bold hover:text-foreground transition-colors">
                   shigruvedas@gmail.com
                 </Link>
               </div>
@@ -157,18 +155,18 @@ export default function Footer() {
         </div>
 
         {/* Newsletter - Glassmorphic Card */}
-        <div className="relative mb-24 p-8 md:p-12 rounded-[32px] bg-white/5 border border-white/5 backdrop-blur-md overflow-hidden">
+        <div className="relative mb-24 p-8 md:p-12 rounded-[32px] bg-card/70 border border-border/60 backdrop-blur-md overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-20 hidden md:block">
             <Leaf className="h-24 w-24 text-primary rotate-45" />
           </div>
           <div className="max-w-2xl">
             <h3 className="text-2xl md:text-3xl font-black mb-4">Join the Healing <span className="text-gradient">Circle</span></h3>
-            <p className="text-slate-400 font-medium mb-8">Subscribe for seasonal harvest updates, authentic recipes, and pure wellness wisdom.</p>
+            <p className="text-muted-foreground font-medium mb-8">Subscribe for seasonal harvest updates, authentic recipes, and pure wellness wisdom.</p>
             <div className="flex flex-col sm:flex-row gap-4">
               <input
                 type="email"
                 placeholder="Your email address"
-                className="flex-1 h-14 bg-white/5 border border-white/10 rounded-2xl px-6 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                className="flex-1 h-14 bg-card/70 border border-white/10 rounded-2xl px-6 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
               <Button className="h-14 px-8 bg-primary hover:bg-primary-dark text-white font-black rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95">
                 Illuminate Me
@@ -177,19 +175,19 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="pt-12 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-slate-500 font-bold text-sm">
+        <div className="pt-12 border-t border-border/60 flex flex-col md:flex-row justify-between items-center gap-8">
+          <p className="text-muted-foreground font-bold text-sm">
             &copy; {currentYear} SHIGRUVEDAS. <span className="font-medium">CRAFTED FOR YOUR SOUL.</span>
           </p>
-          <div className="flex flex-wrap justify-center gap-8 text-[12px] font-black uppercase tracking-widest text-slate-500">
-            {["Privacy", "Terms", "Shipping", "Returns"].map((t) => (
+          <div className="flex flex-wrap justify-center gap-8 text-[12px] font-black uppercase tracking-widest text-muted-foreground">
+            {["Privacy", "Terms", "Shipping"].map((t) => (
               <Link key={t} href={`/${t.toLowerCase()}`} className="hover:text-primary transition-colors">{t}</Link>
             ))}
           </div>
         </div>
 
         {/* SEO Keywords Footer */}
-        <div className="mt-16 pt-8 border-t border-white/5 text-[10px] text-slate-600 font-medium text-center tracking-[0.1em] uppercase">
+        <div className="mt-16 pt-8 border-t border-border/60 text-[10px] text-muted-foreground/80 font-medium text-center tracking-[0.1em] uppercase">
           <p className="mb-2 leading-relaxed max-w-4xl mx-auto">
             Organic Moringa Rajasthan · Moringa Farm Udaipur · Fresh Moringa Leaves · Organic Moringa Powder · Drumsticks · Chemical-free 
             Farming · Sustainable Agriculture · Bulk Moringa Supplier India · Moringa Wellness Rajasthan

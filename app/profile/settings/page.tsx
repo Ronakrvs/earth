@@ -81,10 +81,10 @@ export default function ProfileSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FDFEFC] pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
       {/* Botanical Accents */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-emerald-900/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
 
       <div className="container mx-auto px-6 py-12 max-w-2xl relative z-10">
         <motion.div 
@@ -92,12 +92,12 @@ export default function ProfileSettingsPage() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-6 mb-12"
         >
-          <Link href="/profile" className="w-12 h-12 rounded-2xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-primary hover:border-primary/20 hover:shadow-lg transition-all">
+          <Link href="/profile" className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 hover:shadow-lg transition-all">
             <ChevronLeft className="h-5 w-5" />
           </Link>
           <div className="space-y-1">
-              <h1 className="text-3xl font-black text-slate-900 tracking-tighter italic">Core Protocol.</h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Manage your alchemical identity</p>
+              <h1 className="text-3xl font-black text-foreground tracking-tighter italic">Core Protocol.</h1>
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Manage your alchemical identity</p>
           </div>
         </motion.div>
 
@@ -113,36 +113,36 @@ export default function ProfileSettingsPage() {
                         <div className="w-12 h-12 bg-primary/5 rounded-2xl flex items-center justify-center">
                             <User className="h-6 w-6 text-primary" />
                         </div>
-                        <h2 className="text-lg font-black text-slate-900 italic tracking-tight">Identity Naming</h2>
+                        <h2 className="text-lg font-black text-foreground italic tracking-tight">Identity Naming</h2>
                     </div>
                     
                     <form onSubmit={handleProfile(onProfileSubmit)} className="space-y-8">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Full Nomenclature</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-4">Full Nomenclature</Label>
                             <div className="relative">
-                                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                                <Input className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/20 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none" {...regProfile("full_name")} />
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+                                <Input className="h-14 pl-12 rounded-2xl border-border/40 bg-muted/60 focus:bg-card focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none" {...regProfile("full_name")} />
                             </div>
-                            {profileErrors.full_name && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{profileErrors.full_name.message}</p>}
+                            {profileErrors.full_name && <p className="text-destructive text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{profileErrors.full_name.message}</p>}
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Nexus Identifier (Immutable)</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-4">Nexus Identifier (Immutable)</Label>
                             <div className="relative">
-                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                                <Input className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-100/50 text-slate-400 font-medium cursor-not-allowed border-none shadow-none ring-0 focus-visible:ring-0" defaultValue={session?.user?.email || ""} disabled />
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+                                <Input className="h-14 pl-12 rounded-2xl border-border/40 bg-muted/70 text-muted-foreground font-medium cursor-not-allowed border-none shadow-none ring-0 focus-visible:ring-0" defaultValue={session?.user?.email || ""} disabled />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Communication Line</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-4">Communication Line</Label>
                             <div className="relative">
-                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                                <Input className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/20 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none" placeholder="+91 91665 9895" {...regProfile("phone")} />
+                                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+                                <Input className="h-14 pl-12 rounded-2xl border-border/40 bg-muted/60 focus:bg-card focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none" placeholder="+91 91665 9895" {...regProfile("phone")} />
                             </div>
                         </div>
 
-                        <Button type="submit" className="w-full h-16 bg-primary text-white hover:bg-emerald-900 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/10 transition-all active:scale-95 group border-none" disabled={profileSubmitting}>
+                        <Button type="submit" className="w-full h-16 bg-primary text-primary-foreground hover:bg-primary/90 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-xl shadow-primary/10 transition-all active:scale-95 group border-none" disabled={profileSubmitting}>
                             {profileSubmitting ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                                 <span className="flex items-center gap-3">
                                     Finalize Updates <Save className="h-5 w-5" />
@@ -161,40 +161,40 @@ export default function ProfileSettingsPage() {
             >
                 <MoringaCard className="p-8 md:p-12 border-white shadow-xl" glass={true}>
                     <div className="flex items-center gap-4 mb-10">
-                        <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
-                            <Shield className="h-6 w-6 text-emerald-600" />
+                        <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center">
+                            <Shield className="h-6 w-6 text-primary" />
                         </div>
-                        <h2 className="text-lg font-black text-slate-900 italic tracking-tight">Logic Refresh</h2>
+                        <h2 className="text-lg font-black text-foreground italic tracking-tight">Logic Refresh</h2>
                     </div>
 
                     <form onSubmit={handlePw(onPasswordSubmit)} className="space-y-8">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Current Logic</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-4">Current Logic</Label>
                             <div className="relative">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                                <Input type="password" className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/20 focus:bg-white focus:ring-primary/20 transition-all font-medium border-none shadow-none ring-0 focus-visible:ring-0" {...regPw("current_password")} />
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+                                <Input type="password" className="h-14 pl-12 rounded-2xl border-border/40 bg-muted/60 focus:bg-card focus:ring-primary/20 transition-all font-medium border-none shadow-none ring-0 focus-visible:ring-0" {...regPw("current_password")} />
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">New Security Logic</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-4">New Security Logic</Label>
                             <div className="relative">
-                                <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                                <Input type="password" className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/20 focus:bg-white focus:ring-primary/20 transition-all font-medium border-none shadow-none ring-0 focus-visible:ring-0" placeholder="Minimum 8 characters" {...regPw("new_password")} />
+                                <Key className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+                                <Input type="password" className="h-14 pl-12 rounded-2xl border-border/40 bg-muted/60 focus:bg-card focus:ring-primary/20 transition-all font-medium border-none shadow-none ring-0 focus-visible:ring-0" placeholder="Minimum 8 characters" {...regPw("new_password")} />
                             </div>
-                            {pwErrors.new_password && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{pwErrors.new_password.message}</p>}
+                            {pwErrors.new_password && <p className="text-destructive text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{pwErrors.new_password.message}</p>}
                         </div>
 
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Confirm New Protocol</Label>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground pl-4">Confirm New Protocol</Label>
                             <div className="relative">
-                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
-                                <Input type="password" className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/20 focus:bg-white focus:ring-primary/20 transition-all font-medium border-none shadow-none ring-0 focus-visible:ring-0" {...regPw("confirm_password")} />
+                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
+                                <Input type="password" className="h-14 pl-12 rounded-2xl border-border/40 bg-muted/60 focus:bg-card focus:ring-primary/20 transition-all font-medium border-none shadow-none ring-0 focus-visible:ring-0" {...regPw("confirm_password")} />
                             </div>
-                            {pwErrors.confirm_password && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{pwErrors.confirm_password.message}</p>}
+                            {pwErrors.confirm_password && <p className="text-destructive text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{pwErrors.confirm_password.message}</p>}
                         </div>
 
-                        <Button type="submit" variant="outline" className="w-full h-16 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 group border-slate-100 hover:bg-slate-50" disabled={pwLoading}>
+                        <Button type="submit" variant="outline" className="w-full h-16 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 group border-border hover:bg-muted" disabled={pwLoading}>
                             {pwLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : (
                                 <span className="flex items-center gap-3">
                                     Rotate Logic <RefreshCcw className="h-5 w-5" />

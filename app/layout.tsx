@@ -92,7 +92,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en-IN" className={`${outfit.variable} ${jakarta.variable} scroll-smooth`}>
+    <html lang="en-IN" suppressHydrationWarning className={`${outfit.variable} ${jakarta.variable} scroll-smooth`}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

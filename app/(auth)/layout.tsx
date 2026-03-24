@@ -6,14 +6,14 @@ import * as motion from "framer-motion/client"
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#050B05] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
       {/* Botanical Accents */}
       <div className="absolute top-0 right-0 w-[1000px] h-[1000px] bg-primary/10 rounded-full blur-[200px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-emerald-900/20 rounded-full blur-[180px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-primary/10 rounded-full blur-[180px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.03] pointer-events-none">
         <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
           <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5"/>
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5"/>
           </pattern>
           <rect width="100%" height="100%" fill="url(#grid)" />
         </svg>
@@ -31,8 +31,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <Leaf className="h-8 w-8 text-primary shadow-primary/50" />
             </div>
             <div className="space-y-1">
-                <span className="text-white font-black text-2xl tracking-tighter uppercase block">Shigruvedas</span>
-                <span className="text-primary/60 text-[10px] font-black tracking-[0.4em] uppercase block">Botanical Excellence</span>
+                <span className="text-foreground font-black text-2xl tracking-tighter uppercase block">Shigruvedas</span>
+                <span className="text-muted-foreground text-[10px] font-black tracking-[0.4em] uppercase block">Botanical Excellence</span>
             </div>
           </Link>
         </motion.div>
@@ -53,10 +53,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             transition={{ delay: 0.5 }}
             className="text-center mt-10 space-y-4"
         >
-          <p className="text-[10px] font-black tracking-[0.3em] uppercase text-white/20">
+          <p className="text-[10px] font-black tracking-[0.3em] uppercase text-muted-foreground/70">
             © 2025 Shigruvedas · Alchemical Supply Chain
           </p>
-          <div className="flex justify-center gap-6 text-[10px] font-black tracking-widest uppercase text-white/40">
+          <div className="flex justify-center gap-6 text-[10px] font-black tracking-widest uppercase text-muted-foreground">
             <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Privacy</Link>
             <span className="opacity-20">|</span>
             <Link href="/terms" className="hover:text-primary transition-colors">Terms of Growth</Link>

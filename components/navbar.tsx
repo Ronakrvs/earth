@@ -181,7 +181,7 @@ export default function Navbar() {
               ) : (
                 <div className="hidden sm:flex items-center gap-2">
                   <Link href="/auth/login">
-                    <Button variant="ghost" className="text-slate-600 hover:text-primary font-bold h-11 px-6 rounded-xl hover:bg-primary/5 transition-all">
+                    <Button variant="ghost" className="text-foreground/70 hover:text-primary font-bold h-11 px-6 rounded-xl hover:bg-primary/10 transition-all">
                       Sign In
                     </Button>
                   </Link>
@@ -281,7 +281,7 @@ export default function Navbar() {
                       ) : (
                         <div className="grid grid-cols-2 gap-4">
                           <Link href="/auth/login" className="flex-1" onClick={() => setMobileOpen(false)}>
-                            <Button variant="outline" className="w-full h-16 rounded-2xl border-slate-200 font-bold text-slate-600">Sign In</Button>
+                            <Button variant="outline" className="w-full h-16 rounded-2xl border-border bg-background font-bold text-foreground/80 hover:bg-muted">Sign In</Button>
                           </Link>
                           <Link href="/auth/signup" className="flex-1" onClick={() => setMobileOpen(false)}>
                             <Button className="w-full h-16 rounded-2xl bg-primary hover:bg-primary-dark font-bold text-white shadow-lg shadow-primary/20">Sign Up</Button>
