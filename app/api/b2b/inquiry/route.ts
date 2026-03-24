@@ -3,16 +3,24 @@ import { createAdminClient } from "@/lib/supabase/server"
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData()
-    const data = {
-      company_name: formData.get("company_name"),
-      contact_name: formData.get("contact_name"),
-      email: formData.get("email"),
-      phone: formData.get("phone"),
-      business_type: formData.get("business_type"),
-      products: formData.get("products"),
-      monthly_quantity: formData.get("monthly_quantity"),
-      message: formData.get("message"),
+    // Determine if the request is multipart/form-data or JSON
+    const contentType = req.headers.get("content-type") || ""
+    let data: any = {}
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData()
+      data = {
+        company_name: formData.get("company_name"),
+        contact_name: formData.get("contact_name"),
+        email: formData.get("email"),
+        phone: formData.get("phone"),
+        business_type: formData.get("business_type"),
+        products: formData.get("products"),
+        monthly_quantity: formData.get("monthly_quantity"),
+        message: formData.get("message"),
+      }
+    } else {
+      data = await req.json()
     }
 
     console.log("📝 Processing B2B inquiry for:", data.company_name)
@@ -33,15 +41,18 @@ export async function POST(req: Request) {
 
     if (error) {
       console.error("❌ Supabase insertion error:", error)
-      throw error
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     console.log("✅ B2B inquiry stored successfully:", insertedData?.[0]?.id)
 
-    // Redirect to thank you message
-    return NextResponse.redirect(new URL("/b2b?submitted=true", req.url))
+    return NextResponse.json({ 
+        success: true, 
+        message: "Institutional inquiry received.",
+        id: insertedData?.[0]?.id 
+    })
   } catch (error: any) {
     console.error("🚨 B2B inquiry submission failed:", error.message || error)
-    return NextResponse.redirect(new URL("/b2b?error=true", req.url))
+    return NextResponse.json({ error: error.message || "Internal server error" }, { status: 500 })
   }
 }

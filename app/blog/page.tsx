@@ -11,6 +11,10 @@ export const metadata: Metadata = {
   description: "Science-backed health benefits, delicious recipes and farm stories about organic moringa. Expert wellness tips from our Rajasthan farm.",
 }
 
+import * as motion from "framer-motion/client"
+import { MoringaCard } from "@/components/ui/moringa-card"
+import { cn } from "@/lib/utils"
+
 const CATEGORIES = [
   { label: "All Articles", value: "all", icon: Sparkles },
   { label: "Health & Wellness", value: "health", icon: TrendingUp },
@@ -21,21 +25,17 @@ const CATEGORIES = [
 export default async function BlogPage() {
   const supabase = await createAdminClient()
   
-  const { data: posts, error } = await supabase
+  const { data: posts } = await supabase
     .from('blog_posts')
     .select('*')
     .eq('is_published', true)
     .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error("Error fetching blog posts:", error)
-  }
-
   const formattedPosts = (posts || []).map(post => ({
     ...post,
     category: post.tags?.[0] || "General",
     tag: post.tags?.[1] || "Article",
-    tagColor: "bg-green-600",
+    tagColor: "bg-primary",
     readTime: `${Math.max(1, Math.ceil(post.content.split(" ").length / 200))} min`,
     date: new Date(post.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
     image: post.cover_image || "/images/powder2.png"
@@ -45,157 +45,207 @@ export default async function BlogPage() {
   const rest = formattedPosts.slice(1)
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-green-950 via-green-900 to-emerald-800 text-white pt-16 pb-20 px-4 overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/10 rounded-full blur-3xl" />
-        <div className="container mx-auto max-w-4xl relative text-center">
-          <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm mb-5 border border-white/10">
-            <Leaf className="h-4 w-4 text-green-400" /> Moringa Knowledge Hub
-          </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold mb-4">
-            Health Tips, Recipes &<br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-200">Farm Stories</span>
-          </h1>
-          <p className="text-green-100 max-w-xl mx-auto mb-8">
-            Science-backed wellness insights and delicious recipes from our organic moringa farm in Rajasthan.
-          </p>
+    <div className="min-h-screen bg-background">
+      {/* ─── BLOG HERO ───────────────────────────────────────────── */}
+      <section className="relative pt-32 pb-20 px-4 overflow-hidden">
+        {/* Organic Accents */}
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4" />
+
+        <div className="container mx-auto max-w-4xl relative z-10 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="inline-flex items-center gap-2 bg-primary/5 px-4 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase text-primary mb-8"
+          >
+            <Leaf className="h-4 w-4" /> Moringa Knowledge Hub
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 mb-6 leading-none"
+          >
+            Insights for a <br />
+            <span className="text-gradient">Vital Life</span>
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-slate-500 text-lg font-medium leading-relaxed mb-10 max-w-2xl mx-auto"
+          >
+            Deep dives into the science of moringa, delicious botanical recipes, and stories from our Rajasthan homestead.
+          </motion.p>
+
           {/* Search bar */}
-          <div className="relative max-w-md mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="relative max-w-lg mx-auto"
+          >
+            <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-primary/30" />
             <input
-              placeholder="Search articles..."
-              className="w-full pl-11 pr-4 py-3 rounded-2xl bg-white text-gray-900 text-sm placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-green-300"
+              placeholder="Explore the miracle..."
+              className="w-full pl-14 pr-6 py-5 rounded-[2rem] bg-white border border-primary/5 shadow-2xl shadow-primary/5 text-slate-900 text-sm placeholder:text-slate-300 outline-none focus:ring-2 focus:ring-primary/10 transition-all font-medium"
             />
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Category pills */}
-      <div className="sticky top-16 z-30 bg-white border-b shadow-sm">
-        <div className="container mx-auto px-4 py-3 max-w-5xl">
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      {/* ─── CATEGORIES ───────────────────────────────────────────── */}
+      <div className="sticky top-16 z-30 bg-background/80 backdrop-blur-xl border-b border-slate-100/50">
+        <div className="container mx-auto px-4 py-2 max-w-5xl">
+          <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar justify-center items-center h-14">
             {CATEGORIES.map(({ label, value, icon: Icon }) => (
               <button
                 key={value}
-                className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
+                className={cn(
+                  "flex-shrink-0 flex items-center gap-2 px-6 py-2 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all duration-300",
                   value === "all"
-                    ? "bg-green-600 text-white border-green-600"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600"
-                }`}
+                    ? "bg-primary text-white shadow-xl shadow-primary/20"
+                    : "text-slate-400 hover:text-primary hover:bg-white"
+                )}
               >
-                <Icon className="h-3.5 w-3.5" /> {label}
+                <Icon className="h-4 w-4 opacity-50" /> {label}
               </button>
             ))}
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-5xl px-4 py-12">
+      <div className="container mx-auto max-w-6xl px-4 py-20">
         {formattedPosts.length === 0 ? (
-          <div className="text-center py-20">
-            <Leaf className="h-12 w-12 text-gray-200 mx-auto mb-4" />
-            <p className="text-gray-500">No articles found. Check back soon!</p>
+          <div className="text-center py-32 opacity-20">
+            <Leaf className="h-20 w-20 mx-auto mb-6" />
+            <p className="text-xl font-black uppercase tracking-[0.2em]">Harvesting New Thoughts</p>
           </div>
         ) : (
           <>
             {/* Featured article */}
             {featured && (
-              <Link href={`/blog/${featured.slug}`} className="group block mb-14">
-                <div className="grid md:grid-cols-5 bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all overflow-hidden">
-                  <div className="md:col-span-2 aspect-video md:aspect-auto bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden relative">
-                    <Image
-                      src={featured.image}
-                      alt={featured.title}
-                      fill
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="md:col-span-3 p-6 md:p-10 flex flex-col justify-center">
-                    <div className="flex items-center gap-2 mb-4">
-                      <span className={`${featured.tagColor} text-white text-xs font-bold px-3 py-1 rounded-full capitalize`}>
-                        {featured.tag}
-                      </span>
-                      <Badge className="bg-green-100 text-green-700 capitalize">{featured.category}</Badge>
+              <div className="mb-24">
+                <Link href={`/blog/${featured.slug}`} className="group block">
+                  <MoringaCard className="grid md:grid-cols-2 lg:grid-cols-5 p-0 bg-white border-primary/5 overflow-hidden group-hover:shadow-2xl transition-all" glass={true}>
+                    <div className="lg:col-span-2 aspect-[4/3] md:aspect-auto overflow-hidden relative">
+                      <Image
+                        src={featured.image}
+                        alt={featured.title}
+                        fill
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000 ease-out"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-3 group-hover:text-green-700 transition-colors leading-tight">
-                      {featured.title}
-                    </h2>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-5">{featured.excerpt}</p>
-                    <div className="flex items-center gap-4 text-xs text-gray-400 mb-5">
-                      <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {featured.date}</span>
-                      <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {featured.readTime} read</span>
+                    <div className="md:col-span-1 lg:col-span-3 p-10 md:p-16 flex flex-col justify-center">
+                      <div className="flex items-center gap-3 mb-6">
+                        <span className="bg-primary px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white">{featured.tag}</span>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">{featured.category}</span>
+                      </div>
+                      <h2 className="text-3xl md:text-5xl font-black text-slate-900 mb-6 leading-[1.1] group-hover:text-primary transition-colors tracking-tighter">
+                        {featured.title}
+                      </h2>
+                      <p className="text-slate-500 text-lg mb-8 line-clamp-3 font-medium leading-relaxed">
+                        {featured.excerpt}
+                      </p>
+                      <div className="flex items-center gap-6 text-[10px] text-slate-400 font-black uppercase tracking-widest mb-10">
+                        <span className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary/30" /> {featured.date}</span>
+                        <span className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary/30" /> {featured.readTime} read</span>
+                      </div>
+                      <Button className="h-14 px-10 rounded-2xl bg-primary text-white font-bold group-hover:scale-105 transition-all shadow-xl shadow-primary/20 w-fit">
+                        Explore Full Article <ArrowRight className="ml-2 h-5 w-5" />
+                      </Button>
                     </div>
-                    <span className="inline-flex items-center gap-2 bg-green-600 text-white text-sm font-semibold px-5 py-2.5 rounded-xl group-hover:bg-green-700 transition-colors w-fit">
-                      Read Article <ArrowRight className="h-4 w-4" />
-                    </span>
-                  </div>
-                </div>
-              </Link>
+                  </MoringaCard>
+                </Link>
+              </div>
             )}
 
-            {/* Grid */}
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-extrabold text-gray-900">Latest Articles</h2>
-              <span className="text-sm text-gray-400">{rest.length} articles</span>
+            {/* Latest Grid */}
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-2xl font-black text-slate-900 tracking-tighter italic">The Latest Harvest</h2>
+              <div className="h-px flex-1 mx-10 bg-slate-100/50 hidden sm:block" />
+              <span className="text-[10px] font-black text-primary/40 uppercase tracking-widest">{rest.length} Fresh Narratives</span>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rest.map((post) => (
-                <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
-                  <div className="bg-white rounded-3xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-lg transition-all overflow-hidden h-full flex flex-col">
-                    <div className="relative aspect-[4/3] bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
-                      <Image
-                        src={post.image}
-                        alt={post.title}
-                        fill
-                        className="object-cover group-hover:scale-110 transition-transform duration-500"
-                      />
-                      <span className={`absolute top-3 left-3 ${post.tagColor} text-white text-xs font-bold px-2.5 py-1 rounded-full capitalize`}>
-                        {post.tag}
-                      </span>
-                    </div>
-                    <div className="p-5 flex flex-col flex-1">
-                      <p className="text-xs text-green-600 font-medium mb-1 capitalize">{post.category}</p>
-                      <h3 className="font-bold text-gray-900 text-sm group-hover:text-green-700 transition-colors mb-2 line-clamp-2 leading-snug flex-1">
-                        {post.title}
-                      </h3>
-                      <p className="text-xs text-gray-500 line-clamp-2 mb-4">{post.excerpt}</p>
-                      <div className="flex items-center justify-between text-xs text-gray-400 mt-auto">
-                        <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> {post.date}</span>
-                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {post.readTime}</span>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+              {rest.map((post, idx) => (
+                <motion.div
+                  key={post.slug}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <Link href={`/blog/${post.slug}`} className="group block h-full">
+                    <MoringaCard className="p-0 border-primary/5 hover:bg-white transition-all overflow-hidden h-full flex flex-col" glass={true}>
+                      <div className="relative aspect-[16/10] overflow-hidden">
+                        <Image
+                          src={post.image}
+                          alt={post.title}
+                          fill
+                          className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                        />
+                        <div className="absolute top-4 left-4">
+                          <span className="bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest text-primary shadow-sm border border-primary/5">{post.tag}</span>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </Link>
+                      <div className="p-8 flex flex-col flex-1">
+                        <p className="text-[10px] text-primary/40 font-black uppercase tracking-[0.2em] mb-4">{post.category}</p>
+                        <h3 className="font-extrabold text-slate-900 text-xl group-hover:text-primary transition-colors mb-4 line-clamp-2 leading-tight flex-1 tracking-tight">
+                          {post.title}
+                        </h3>
+                        <p className="text-slate-500 text-sm line-clamp-2 mb-8 font-medium italic">"{post.excerpt}"</p>
+                        <div className="flex items-center justify-between pt-6 border-t border-slate-50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                          <span className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5 opacity-30" /> {post.date}</span>
+                          <span className="flex items-center gap-2"><Clock className="h-3.5 w-3.5 opacity-30" /> {post.readTime}</span>
+                        </div>
+                      </div>
+                    </MoringaCard>
+                  </Link>
+                </motion.div>
               ))}
             </div>
           </>
         )}
 
-        {/* Newsletter */}
-        <div className="mt-16 bg-gradient-to-br from-green-700 to-emerald-600 rounded-3xl p-8 md:p-12 text-white relative overflow-hidden">
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full" />
-          <div className="relative text-center max-w-lg mx-auto">
-            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Leaf className="h-6 w-6" />
+        {/* ─── NEWSLETTER ───────────────────────────────────────────── */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="mt-32"
+        >
+          <MoringaCard className="bg-gradient-to-br from-primary to-emerald-900 p-12 md:p-24 text-center text-white relative overflow-hidden border-none" glass={false}>
+            {/* Background Texture */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <circle cx="90" cy="10" r="30" fill="currentColor" />
+                <circle cx="10" cy="90" r="20" fill="currentColor" />
+              </svg>
             </div>
-            <h2 className="text-2xl md:text-3xl font-extrabold mb-2">Stay in the Loop 🌿</h2>
-            <p className="text-green-100 mb-6 text-sm">
-              Get moringa recipes, health research, and exclusive farm updates delivered weekly.
-            </p>
-            <form className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder="Enter your email address"
-                className="flex-1 px-5 py-3 rounded-2xl bg-white/10 text-white placeholder:text-green-200 text-sm border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30 backdrop-blur-sm"
-              />
-              <Button className="bg-white text-green-700 hover:bg-green-50 font-bold px-6 rounded-2xl flex-shrink-0">
-                Subscribe Free
-              </Button>
-            </form>
-            <p className="text-green-200 text-xs mt-3">No spam. Unsubscribe anytime.</p>
-          </div>
-        </div>
+
+            <div className="relative z-10 max-w-2xl mx-auto">
+              <div className="inline-flex h-16 w-16 rounded-3xl bg-white/10 items-center justify-center mb-8 backdrop-blur-md">
+                <Leaf className="h-8 w-8 text-secondary" />
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black mb-6 tracking-tighter">Stay Rooted in <br/> Wellness 🌿</h2>
+              <p className="text-emerald-100/70 text-lg mb-12 font-medium">Join 5,000+ botanical enthusiasts. Receive moringa recipes, research, and life-harvesting tips every Sunday.</p>
+              
+              <form className="flex flex-col sm:flex-row gap-4">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="flex-1 px-8 py-5 rounded-2xl bg-white/10 text-white placeholder:text-emerald-200/50 text-sm border border-white/20 focus:outline-none focus:ring-4 focus:ring-white/10 backdrop-blur-xl transition-all outline-none font-bold"
+                />
+                <Button size="lg" className="h-16 px-10 bg-white text-primary hover:bg-emerald-50 rounded-2xl font-black text-lg shadow-2xl transition-all active:scale-95">
+                  Subscribe Free
+                </Button>
+              </form>
+              <p className="text-emerald-300/40 text-[10px] mt-6 font-bold uppercase tracking-[0.2em] italic">No spam. Just pure botanical inspiration.</p>
+            </div>
+          </MoringaCard>
+        </motion.div>
       </div>
     </div>
   )

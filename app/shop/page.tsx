@@ -1,15 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Leaf, Star } from "lucide-react"
+import { Leaf, Star, ArrowRight } from "lucide-react"
 import ProductCard from "@/components/shop/ProductCard"
 import SortSelect from "@/components/shop/SortSelect"
 import { createSimpleClient } from "@/lib/supabase/client"
-
-export const metadata: Metadata = {
-  title: "Shop Organic Moringa Products | Shigruvedas",
-  description: "Browse our range of organic moringa powder, fresh leaves, and drumsticks. Multiple weight options, competitive pricing, free delivery across India.",
-}
+import { cn } from "@/lib/utils"
 
 const CATEGORIES = [
   { value: "all", label: "All Products" },
@@ -17,6 +13,14 @@ const CATEGORIES = [
   { value: "moringa-leaves", label: "Moringa Leaves" },
   { value: "drumsticks", label: "Drumsticks" },
 ]
+
+export const metadata: Metadata = {
+  title: "Shop Organic Moringa Products | Shigruvedas",
+  description: "Browse our range of organic moringa powder, fresh leaves, and drumsticks. Multiple weight options, competitive pricing, free delivery across India.",
+}
+
+import * as motion from "framer-motion/client"
+import { MoringaCard } from "@/components/ui/moringa-card"
 
 export default async function ShopPage({
   searchParams,
@@ -40,11 +44,7 @@ export default async function ShopPage({
     query = query.eq("category", activeCategory)
   }
 
-  const { data: products, error } = await query
-
-  if (error) {
-    console.error("Error fetching products:", JSON.stringify(error, null, 2))
-  }
+  const { data: products } = await query
 
   const sortedProducts = [...(products || [])].sort((a, b) => {
     if (activeSort === "price-asc") {
@@ -57,90 +57,146 @@ export default async function ShopPage({
       const priceB = Math.min(...b.product_variants.map((v: any) => v.price))
       return priceB - priceA
     }
-    // featured first
     return Number(b.is_featured) - Number(a.is_featured)
   })
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero banner */}
-      <div className="bg-gradient-to-r from-green-800 to-emerald-700 text-white py-12 px-4">
-        <div className="container mx-auto text-center">
-          <div className="flex justify-center mb-3">
-            <div className="bg-white/20 rounded-full p-3">
-              <Leaf className="h-8 w-8" />
+    <div className="min-h-screen bg-background">
+      {/* ─── SHOP HERO ────────────────────────────────────────────── */}
+      <section className="relative pt-32 pb-24 px-4 overflow-hidden">
+        {/* Background Accents */}
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4" />
+
+        <div className="container mx-auto max-w-7xl relative z-10">
+          <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-full text-[10px] font-black tracking-widest uppercase text-primary mb-8"
+            >
+              <Leaf className="h-3 w-3" /> Botanical Marketplace
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 mb-6 leading-none"
+            >
+              Shop the <span className="text-gradient">Miracle</span>
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-slate-500 text-lg md:text-xl font-medium leading-relaxed"
+            >
+              Experience the world's most nutrient-dense superfood, harvested with care and delivered fresh from our certified organic farm.
+            </motion.p>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── CONTROLS & GRID ──────────────────────────────────────── */}
+      <section className="pb-32 px-4">
+        <div className="container mx-auto max-w-7xl">
+          {/* Controls Bar */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-16 py-6 border-y border-slate-100/50">
+            {/* Category Navigation */}
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              {CATEGORIES.map((cat, idx) => (
+                <Link
+                  key={cat.value}
+                  href={`/shop?category=${cat.value}`}
+                  className={cn(
+                    "px-6 py-2.5 rounded-2xl text-[13px] font-black uppercase tracking-wider transition-all duration-300",
+                    activeCategory === cat.value
+                      ? "bg-primary text-white shadow-xl shadow-primary/20 scale-105"
+                      : "bg-white/50 text-slate-400 hover:text-primary hover:bg-white border border-transparent hover:border-primary/10"
+                  )}
+                >
+                  {cat.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="flex items-center gap-4">
+              <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest hidden sm:block">Sort By</span>
+              <SortSelect defaultValue={activeSort} />
             </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">Organic Moringa Products</h1>
-          <p className="text-green-100 max-w-xl mx-auto">
-            Direct from our 7+ acre certified organic farm in Udaipur, Rajasthan. Free delivery on orders above ₹499.
-          </p>
-          {/* Trust badges */}
-          <div className="flex flex-wrap justify-center gap-6 mt-6 text-sm text-green-100">
-            {["100% Organic", "Free Delivery ₹499+", "Chemical-Free", "Farm to Table"].map((b) => (
-              <div key={b} className="flex items-center gap-1.5">
-                <Star className="h-3.5 w-3.5 fill-current" />
-                <span>{b}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Filters bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-          {/* Category tabs */}
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.value}
-                href={`/shop?category=${cat.value}`}
-                className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-all ${
-                  activeCategory === cat.value
-                    ? "bg-green-600 text-white border-green-600"
-                    : "bg-white text-gray-600 border-gray-200 hover:border-green-400 hover:text-green-600"
-                }`}
+          {/* Results Count */}
+          <div className="flex items-center gap-4 mb-12">
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
+            <span className="text-[10px] font-black text-primary/40 uppercase tracking-[0.3em]">
+              Showing {sortedProducts.length} Earth-Derived Results
+            </span>
+            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
+          </div>
+
+          {/* Product Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+            {sortedProducts.map((product, idx) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: (idx % 4) * 0.1 }}
               >
-                {cat.label}
-              </Link>
+                <ProductCard product={product as any} />
+              </motion.div>
             ))}
           </div>
 
-          {/* Sort */}
-          <SortSelect defaultValue={activeSort} />
+          {/* Empty State */}
+          {sortedProducts.length === 0 && (
+            <div className="text-center py-32">
+              <div className="inline-flex h-24 w-24 rounded-full bg-slate-50 items-center justify-center mb-8">
+                <Leaf className="h-10 w-10 text-slate-200" />
+              </div>
+              <h2 className="text-2xl font-black text-slate-900 mb-4">Nature's taking a break.</h2>
+              <p className="text-slate-500 mb-8 max-w-md mx-auto font-medium">No products found in this category. We're constantly harvesting new batches, so please check back soon.</p>
+              <Link href="/shop">
+                <Button variant="outline" className="h-14 px-10 rounded-2xl border-primary/20 text-primary font-bold hover:bg-primary/5">
+                  Clear All Filters
+                </Button>
+              </Link>
+            </div>
+          )}
+
+          {/* ─── B2B CALLOUT ────────────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            className="mt-32"
+          >
+            <MoringaCard className="bg-gradient-to-br from-primary to-emerald-800 p-12 md:p-20 text-center text-white overflow-hidden relative border-none" glass={false}>
+              <div className="absolute inset-0 opacity-10 pointer-events-none">
+                <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                  <path d="M0,0 Q50,20 100,0 V100 Q50,80 0,100 Z" fill="currentColor" />
+                </svg>
+              </div>
+              
+              <div className="relative z-10 max-w-3xl mx-auto">
+                <div className="inline-flex h-14 w-14 rounded-2xl bg-white/10 items-center justify-center mb-6">
+                  <Star className="h-6 w-6 text-accent fill-accent" />
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black mb-6 tracking-tighter italic">Bulk Wholesale Inquiries</h2>
+                <p className="text-emerald-100/70 text-lg mb-10 font-medium">Looking for bulk quantities for your business or retail store? Access exclusive B2B pricing and wholesale rates directly from the source.</p>
+                <Link href="/b2b">
+                  <Button size="lg" className="h-16 px-10 bg-white text-primary hover:bg-emerald-50 rounded-2xl font-bold text-lg shadow-2xl group">
+                    Explore B2B Pricing <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </div>
+            </MoringaCard>
+          </motion.div>
         </div>
-
-        {/* Count */}
-        <p className="text-sm text-gray-500 mb-6">{sortedProducts.length} products found</p>
-
-        {/* Product Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sortedProducts.map((product) => (
-            <ProductCard key={product.id} product={product as any} />
-          ))}
-        </div>
-
-        {sortedProducts.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-gray-500">No products found in this category.</p>
-            <Link href="/shop">
-              <Button variant="outline" className="mt-4">View All Products</Button>
-            </Link>
-          </div>
-        )}
-
-        {/* B2B CTA */}
-        <div className="mt-16 bg-gradient-to-r from-green-700 to-emerald-600 rounded-2xl p-8 text-white text-center">
-          <h2 className="text-2xl font-bold mb-2">Need Bulk Quantities?</h2>
-          <p className="text-green-100 mb-4">Get exclusive wholesale pricing for B2B orders. Minimum 5kg orders welcome.</p>
-          <Link href="/b2b">
-            <Button variant="secondary" className="font-semibold">
-              Explore B2B Pricing →
-            </Button>
-          </Link>
-        </div>
-      </div>
+      </section>
     </div>
   )
 }

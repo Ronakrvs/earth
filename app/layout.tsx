@@ -1,21 +1,28 @@
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Inter } from "next/font/google"
+import { Outfit, Plus_Jakarta_Sans } from "next/font/google"
 import "./globals.css"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import Providers from "@/components/Providers"
+import ThemeWrapper from "@/components/layout/ThemeWrapper"
 import { Toaster } from "sonner"
 import Script from "next/script"
 
-
-const inter = Inter({ 
+const outfit = Outfit({ 
   subsets: ["latin"],
   display: 'swap',
-  variable: '--font-inter'
+  variable: '--font-outfit'
+})
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: 'swap',
+  variable: '--font-jakarta'
 })
 
 export const metadata: Metadata = {
+  // ... existing metadata stays the same
   metadataBase: new URL('https://shigruvedas.com'),
   title: {
     default: "Shigruvedas - Organic Moringa Farm | Fresh Leaves, Powder & Drumsticks",
@@ -36,8 +43,6 @@ export const metadata: Metadata = {
   authors: [{ name: "Shigruvedas Organic Farm" }],
   creator: "Shigruvedas",
   publisher: "Shigruvedas",
-  
-  // Open Graph
   openGraph: {
     type: "website",
     siteName: "Shigruvedas",
@@ -54,16 +59,12 @@ export const metadata: Metadata = {
     ],
     locale: "en_IN",
   },
-
-  // Twitter Cards
   twitter: {
     card: "summary_large_image",
     title: "Shigruvedas - Organic Moringa Farm",
     description: "Premium organic moringa products from our farm. Fresh leaves, powder & drumsticks.",
     images: ["/twitter-image.jpg"],
   },
-
-  // Additional SEO
   robots: {
     index: true,
     follow: true,
@@ -75,10 +76,14 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-
   alternates: {
     canonical: "https://shigruvedas.com",
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#064e3b",
+  viewportFit: "cover",
 }
 
 export default function RootLayout({
@@ -87,28 +92,18 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en-IN" className={inter.variable}>
+    <html lang="en-IN" className={`${outfit.variable} ${jakarta.variable} scroll-smooth`}>
       <head>
-        {/* Preconnect to external domains for better performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
-        {/* Favicon and app icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <link rel="manifest" href="/manifest.json" />
-        
-        {/* Theme color for mobile browsers */}
-        <meta name="theme-color" content="#22c55e" />
-        <meta name="msapplication-TileColor" content="#22c55e" />
-        
-        {/* Additional SEO meta tags */}
         <meta name="format-detection" content="telephone=yes" />
         <meta name="HandheldFriendly" content="true" />
         <meta name="MobileOptimized" content="width" />
-        
-        {/* Structured Data - Enhanced LocalBusiness Schema with Products */}
+        {/* ... existing scripts ... */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -211,8 +206,6 @@ export default function RootLayout({
             })
           }}
         />
-
-        {/* Structured Data - Organization Schema */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
@@ -224,7 +217,7 @@ export default function RootLayout({
               "url": "https://shigruvedas.com",
               "logo": "https://shigruvedas.com/logo.png",
               "description": "Certified organic moringa farming company in Rajasthan specializing in fresh leaves, powder, and drumsticks",
-              "foundingDate": "2020", // Update with actual founding date
+              "foundingDate": "2020",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "248, A-Block, hiran magri",
@@ -248,23 +241,22 @@ export default function RootLayout({
         />
       </head>
       
-      <body className={inter.className}>
+      <body className={`${outfit.className} bg-background font-outfit selection:bg-primary/20 selection:text-primary`}>
         <Providers>
-          {/* Skip to main content for accessibility */}
-          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 z-50">
+          <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-primary text-white p-2 z-50 rounded-b-lg">
             Skip to main content
           </a>
           
-          <Navbar />
+          <ThemeWrapper>
+            <Navbar />
+            <main id="main-content" role="main" className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </ThemeWrapper>
           
-          <main id="main-content" role="main">
-            {children}
-          </main>
-          
-          <Footer />
           <Toaster position="top-right" richColors closeButton />
 
-          {/* Google Analytics - Replace with your GA4 measurement ID */}
           {process.env.NODE_ENV === 'production' && (
             <>
               <Script

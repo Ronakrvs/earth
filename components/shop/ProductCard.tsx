@@ -33,6 +33,8 @@ interface ProductCardProps {
   product: Product
 }
 
+import { MoringaCard } from "@/components/ui/moringa-card"
+
 export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCart((s) => s.addItem)
   const openCart = useCart((s) => s.openCart)
@@ -65,87 +67,82 @@ export default function ProductCard({ product }: ProductCardProps) {
   }
 
   return (
-    <Link href={`/products/${product.slug}`} className="group block">
-      <div className="bg-white rounded-2xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
-        {/* Image */}
-        <div className="relative aspect-square bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden">
+    <Link href={`/products/${product.slug}`} className="group block h-full">
+      <MoringaCard className="flex flex-col h-full bg-white/50 border-primary/5 hover:bg-white transition-all overflow-hidden" glass={true}>
+        {/* Image Display */}
+        <div className="relative aspect-[4/5] bg-gradient-to-br from-secondary/30 to-background overflow-hidden">
           <Image
             src={product.thumbnail}
             alt={product.name}
             fill
-            className="object-contain p-6 group-hover:scale-105 transition-transform duration-500"
+            className="object-contain p-8 group-hover:scale-110 transition-transform duration-700 ease-out"
           />
-          {product.is_featured && (
-            <Badge className="absolute top-3 left-3 bg-green-600 text-white text-xs">
-              <Leaf className="h-3 w-3 mr-1" /> Featured
-            </Badge>
-          )}
-          {discount > 0 && (
-            <Badge className="absolute top-3 right-3 bg-orange-500 text-white text-xs">
-              -{discount}%
-            </Badge>
-          )}
+          <div className="absolute top-4 left-4 flex flex-col gap-2">
+            {product.is_featured && (
+              <Badge className="bg-white/90 backdrop-blur-md text-primary border-none shadow-sm font-black px-3 py-1 text-[10px] uppercase tracking-widest">
+                <Leaf className="h-3 w-3 mr-1" /> Featured
+              </Badge>
+            )}
+            {discount > 0 && (
+              <Badge className="bg-accent text-white border-none shadow-sm font-black px-3 py-1 text-[10px] uppercase tracking-widest">
+                -{discount}% OFF
+              </Badge>
+            )}
+          </div>
         </div>
 
-        {/* Info */}
-        <div className="p-4">
-          <h3 className="font-semibold text-gray-800 group-hover:text-green-700 transition-colors line-clamp-1 mb-1">
-            {product.name}
-          </h3>
-          <p className="text-xs text-gray-500 line-clamp-2 mb-3">{product.short_description}</p>
+        {/* Product Information */}
+        <div className="p-6 flex flex-col flex-1">
+          <div className="mb-2">
+            <h3 className="font-extrabold text-slate-900 group-hover:text-primary transition-colors line-clamp-1 text-lg tracking-tight">
+              {product.name}
+            </h3>
+            <p className="text-[10px] text-primary/60 font-black uppercase tracking-widest">{product.category.replace("-", " ")}</p>
+          </div>
 
-          {/* Rating */}
-          {product.avg_rating && (
-            <div className="flex items-center gap-1 mb-3">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-3 w-3 ${i < Math.floor(product.avg_rating!) ? "fill-amber-400 text-amber-400" : "text-gray-200"}`}
-                />
-              ))}
-              <span className="text-xs text-gray-500 ml-1">({product.review_count})</span>
-            </div>
-          )}
+          <p className="text-xs text-slate-500 line-clamp-2 mb-4 font-medium leading-relaxed flex-1">
+            {product.short_description}
+          </p>
 
-          {/* Price */}
-          {cheapestVariant ? (
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg font-bold text-gray-900">₹{cheapestVariant.price}</span>
-              {cheapestVariant.compare_price && (
-                <span className="text-sm text-gray-400 line-through">₹{cheapestVariant.compare_price}</span>
+          {/* Rating & Price Row */}
+          <div className="flex items-center justify-between mb-6 pt-4 border-t border-slate-100">
+            <div>
+              {cheapestVariant ? (
+                <div className="flex flex-col">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-2xl font-black text-slate-900 leading-none">₹{cheapestVariant.price}</span>
+                    {cheapestVariant.compare_price && (
+                      <span className="text-sm text-slate-400 line-through font-medium">₹{cheapestVariant.compare_price}</span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">{cheapestVariant.weight}</span>
+                </div>
+              ) : (
+                <p className="text-xs font-bold text-red-500 uppercase tracking-widest">Out of stock</p>
               )}
-              <span className="text-xs text-gray-500">{cheapestVariant.weight}</span>
             </div>
-          ) : (
-            <p className="text-sm text-red-500 mb-3">Out of stock</p>
-          )}
-
-          {/* Variant pills */}
-          <div className="flex flex-wrap gap-1 mb-4">
-            {product.product_variants.slice(0, 4).map((v) => (
-              <span
-                key={v.id}
-                className={`text-xs px-2 py-0.5 rounded-full border ${
-                  v.stock > 0
-                    ? "border-gray-200 text-gray-600 bg-gray-50"
-                    : "border-gray-100 text-gray-300 bg-gray-50 line-through"
-                }`}
-              >
-                {v.weight}
-              </span>
-            ))}
+            
+            {product.avg_rating && (
+              <div className="flex flex-col items-end">
+                <div className="flex items-center gap-0.5">
+                  <Star className="h-3 w-3 fill-accent text-accent" />
+                  <span className="text-xs font-black text-slate-900 ml-1">{product.avg_rating}</span>
+                </div>
+                <span className="text-[10px] text-slate-400 font-bold">({product.review_count})</span>
+              </div>
+            )}
           </div>
 
           <Button
-            className="w-full bg-green-600 hover:bg-green-700 text-white gap-2"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-bold rounded-xl h-12 shadow-lg shadow-primary/10 transition-all active:scale-95 group/btn"
             onClick={handleAddToCart}
             disabled={!cheapestVariant}
           >
-            <ShoppingCart className="h-4 w-4" />
+            <ShoppingCart className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
             Add to Cart
           </Button>
         </div>
-      </div>
+      </MoringaCard>
     </Link>
   )
 }

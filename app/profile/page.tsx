@@ -3,20 +3,23 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import {
     Package, MapPin, Settings, LogOut, ChevronRight,
-    ShoppingBag, Heart, Star, Shield
+    ShoppingBag, Heart, Star, Shield, Leaf, ArrowUpRight, Zap, Sparkles
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { MoringaCard } from "@/components/ui/moringa-card"
+import * as motion from "framer-motion/client"
 
 const NAV_ITEMS = [
-  { href: "/profile/orders", icon: Package, label: "My Orders", desc: "Track and view order history", color: "bg-blue-50 text-blue-600", badge: null },
-  { href: "/profile/addresses", icon: MapPin, label: "Saved Addresses", desc: "Manage delivery addresses", color: "bg-purple-50 text-purple-600", badge: null },
-  { href: "/profile/settings", icon: Settings, label: "Account Settings", desc: "Name, email, password", color: "bg-gray-50 text-gray-600", badge: null },
+  { href: "/profile/orders", icon: Package, label: "Acquisition History", desc: "Review your botanical heritage", color: "text-primary bg-primary/5", badge: null },
+  { href: "/profile/addresses", icon: MapPin, label: "Delivery Nexus", desc: "Manage your shipping coordinates", color: "text-emerald-600 bg-emerald-50", badge: null },
+  { href: "/profile/settings", icon: Settings, label: "Core Protocol", desc: "Refine your alchemical identity", color: "text-slate-600 bg-slate-50", badge: null },
 ]
 
 const QUICK_STATS = [
-  { label: "Orders", value: "0", icon: ShoppingBag, color: "text-blue-600 bg-blue-50" },
-  { label: "Wishlist", value: "0", icon: Heart, color: "text-pink-600 bg-pink-50" },
-  { label: "Reviews", value: "0", icon: Star, color: "text-amber-600 bg-amber-50" },
+  { label: "Manifested", value: "0", icon: ShoppingBag, color: "text-primary bg-primary/5" },
+  { label: "Favorites", value: "0", icon: Heart, color: "text-rose-600 bg-rose-50" },
+  { label: "Rank", value: "Novice", icon: Zap, color: "text-amber-600 bg-amber-50" },
 ]
 
 export default async function ProfilePage() {
@@ -31,91 +34,147 @@ export default async function ProfilePage() {
     .slice(0, 2) || "U"
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Profile hero */}
-      <div className="bg-gradient-to-br from-green-900 to-emerald-800 text-white pt-10 pb-20 px-4">
-        <div className="container mx-auto max-w-3xl">
-          <div className="flex items-center gap-4">
-            {session.user?.image ? (
-              <img src={session.user.image} alt="Avatar" className="w-16 h-16 rounded-2xl object-cover border-2 border-white/20" />
-            ) : (
-              <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-xl font-bold border border-white/10">
-                {initials}
-              </div>
-            )}
-            <div>
-              <h1 className="text-2xl font-extrabold">{session.user?.name || "Welcome!"}</h1>
-              <p className="text-green-200 text-sm">{session.user?.email}</p>
-              <Badge className="bg-white/20 text-white border-white/20 text-xs mt-1">
-                {(session.user as any)?.role === "admin" ? "Admin" : "Member"}
-              </Badge>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#FDFEFC] pb-24 relative overflow-hidden">
+      {/* Botanical Background Elements */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-900/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+
+      {/* Hero Section: The Guardian's Nexus */}
+      <div className="relative pt-20 pb-16 overflow-hidden">
+        <div className="container mx-auto max-w-4xl px-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col md:flex-row items-center md:items-end gap-8"
+          >
+             <div className="relative group">
+                <div className="absolute -inset-4 bg-primary/10 rounded-[3rem] blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                {session.user?.image ? (
+                  <img src={session.user.image} alt="Avatar" className="w-32 h-32 rounded-[2.5rem] object-cover border border-white shadow-2xl relative z-10" />
+                ) : (
+                  <div className="w-32 h-32 bg-white rounded-[2.5rem] flex items-center justify-center text-3xl font-black text-primary border border-slate-100 shadow-2xl relative z-10 uppercase">
+                    {initials}
+                  </div>
+                )}
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-primary rounded-2xl flex items-center justify-center border-4 border-white z-20 shadow-lg">
+                    <Sparkles className="h-4 w-4 text-white" />
+                </div>
+             </div>
+
+             <div className="text-center md:text-left space-y-2 flex-1">
+                <div className="flex flex-col md:flex-row md:items-center gap-3">
+                    <h1 className="text-4xl font-black text-slate-900 tracking-tighter italic">Greetings, {session.user?.name?.split(" ")[0] || "Keeper"}.</h1>
+                    <Badge className="w-fit mx-auto md:mx-0 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full">
+                        {(session.user as any)?.role === "admin" ? "Grand Alchemist" : "Botanical Member"}
+                    </Badge>
+                </div>
+                <p className="text-sm font-medium text-slate-400 max-w-md">
+                    Welcome to your personal sanctuary. Manage your botanical assets and refine your organic journey.
+                </p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-300">Identifier: {session.user?.email}</p>
+             </div>
+
+             <div className="hidden md:block">
+                <Link href="/shop">
+                    <Button className="h-14 px-8 bg-slate-900 text-white hover:bg-primary rounded-2xl font-black text-xs uppercase tracking-widest transition-all group flex items-center gap-3 border-none">
+                        Explore Flora <ArrowUpRight className="h-4 w-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </Button>
+                </Link>
+             </div>
+          </motion.div>
         </div>
       </div>
 
-      <div className="container mx-auto max-w-3xl px-4 -mt-10 pb-10">
-        {/* Quick stats */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          {QUICK_STATS.map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-center">
-              <div className={`w-9 h-9 ${color} rounded-xl flex items-center justify-center mx-auto mb-2`}>
-                <Icon className="h-4.5 w-4.5" />
-              </div>
-              <div className="text-data font-extrabold text-gray-900 text-xl">{value}</div>
-              <div className="text-xs text-gray-500">{label}</div>
+      <div className="container mx-auto max-w-4xl px-6 space-y-8">
+        {/* Quick Insights Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {QUICK_STATS.map(({ label, value, icon: Icon, color }, i) => (
+            <motion.div
+                key={label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+            >
+                <MoringaCard className="p-8 text-center space-y-4 hover:shadow-2xl transition-all duration-500 border-white" glass={true}>
+                    <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center mx-auto transition-transform group-hover:scale-110`}>
+                        <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                        <div className="text-3xl font-black text-slate-900 tracking-tighter italic">{value}</div>
+                        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">{label}</div>
+                    </div>
+                </MoringaCard>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Primary Navigation Protocol */}
+        <MoringaCard className="overflow-hidden border-white shadow-xl" glass={true}>
+            <div className="p-6 border-b border-primary/5 bg-primary/5">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Operational Core</h2>
             </div>
-          ))}
-        </div>
+            <div className="divide-y divide-primary/5">
+              {NAV_ITEMS.map(({ href, icon: Icon, label, desc, color }, i) => (
+                <Link key={href} href={href} className="group flex items-center gap-6 p-8 hover:bg-white/50 transition-all">
+                    <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform duration-500`}>
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="flex-1 space-y-1 text-left">
+                      <div className="text-lg font-black text-slate-900 tracking-tight italic group-hover:text-primary transition-colors">{label}</div>
+                      <div className="text-xs font-medium text-slate-400">{desc}</div>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500">
+                        <ChevronRight className="h-4 w-4 text-slate-900" />
+                    </div>
+                </Link>
+              ))}
+            </div>
+        </MoringaCard>
 
-        {/* Navigation cards */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
-          {NAV_ITEMS.map(({ href, icon: Icon, label, desc, color }, i) => (
-            <Link key={href} href={href}>
-              <div className={`flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors ${i < NAV_ITEMS.length - 1 ? "border-b border-gray-50" : ""}`}>
-                <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-gray-900 text-sm">{label}</div>
-                  <div className="text-xs text-gray-500">{desc}</div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-gray-300" />
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Admin shortcut */}
+        {/* Alchemist Control (Admin) */}
         {(session.user as any)?.role === "admin" && (
-          <Link href="/admin">
-            <div className="bg-gradient-to-r from-green-700 to-emerald-600 rounded-2xl p-4 text-white flex items-center gap-4 mb-4 hover:from-green-800 hover:to-emerald-700 transition-all">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Shield className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <div className="font-semibold text-sm">Admin Dashboard</div>
-                <div className="text-xs text-green-100">Manage products, orders & users</div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-white/60" />
-            </div>
-          </Link>
+           <motion.div 
+               initial={{ opacity: 0, scale: 0.98 }}
+               animate={{ opacity: 1, scale: 1 }}
+           >
+              <Link href="/admin">
+                <div className="relative group overflow-hidden rounded-[2.5rem] p-10 bg-slate-900 text-white shadow-2xl shadow-primary/20">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none transition-all group-hover:scale-150" />
+                    <div className="relative z-10 flex items-center gap-8">
+                        <div className="w-20 h-20 bg-white/10 backdrop-blur-3xl rounded-[2rem] flex items-center justify-center shrink-0 border border-white/10 group-hover:rotate-12 transition-transform duration-500">
+                            <Shield className="h-10 w-10 text-primary" />
+                        </div>
+                        <div className="flex-1 text-left space-y-2">
+                            <div className="text-3xl font-black tracking-tighter italic">Alchemical Chamber</div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80">Supreme Administrative Nexus</div>
+                            <p className="text-sm font-medium text-slate-400 leading-relaxed max-w-md">
+                                Orchestrate the botanical cycle. Manage flora, acquisition streams, and the alchemical database.
+                            </p>
+                        </div>
+                        <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-xl group-hover:translate-x-4 transition-all duration-500">
+                            <ChevronRight className="h-8 w-8 text-white" />
+                        </div>
+                    </div>
+                </div>
+              </Link>
+           </motion.div>
         )}
 
-        {/* Sign out */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <form action="/api/auth/signout" method="POST">
-            <button className="flex items-center gap-4 p-4 w-full hover:bg-red-50 transition-colors group">
-              <div className="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-red-100 transition-colors">
-                <LogOut className="h-5 w-5 text-red-500" />
-              </div>
-              <div className="flex-1 text-left">
-                <div className="font-semibold text-red-600 text-sm">Sign Out</div>
-                <div className="text-xs text-gray-500">Log out of your account</div>
-              </div>
-            </button>
-          </form>
-        </div>
+        {/* Neutralize Session (Sign Out) */}
+        <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-center pt-8"
+        >
+            <form action="/api/auth/signout" method="POST" className="w-full">
+                <button className="group w-full flex items-center justify-center gap-6 p-8 border border-slate-100 rounded-[2.5rem] bg-white hover:bg-rose-50 hover:border-rose-100 transition-all duration-500 group overflow-hidden relative">
+                   <div className="flex items-center gap-4 relative z-10">
+                        <LogOut className="h-5 w-5 text-slate-300 group-hover:text-rose-500 group-hover:-translate-x-2 transition-all duration-500" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 group-hover:text-rose-600 transition-colors">Neutralize Session</span>
+                   </div>
+                </button>
+            </form>
+        </motion.div>
       </div>
     </div>
   )

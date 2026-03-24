@@ -1,13 +1,18 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import Image from "next/image"
+import * as motion from "framer-motion/client"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
-    ArrowRight, Leaf, Shield, Truck, Star, CheckCircle2, Zap, Heart, Phone, ChevronRight
+    ArrowRight, Leaf, Star, CheckCircle2, Heart, Phone, ChevronRight, Zap, Sparkles
 } from "lucide-react"
 import { createSimpleClient } from "@/lib/supabase/client"
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClientStatic } from "@/lib/supabase/server"
+import Hero from "@/components/home/Hero"
+import StatsBar from "@/components/home/StatsBar"
+import Features from "@/components/home/Features"
+import { MoringaCard, BentoGrid, BentoItem } from "@/components/ui/moringa-card"
 
 export const metadata: Metadata = {
   title: "Organic Moringa Products — Fresh from Rajasthan Farm | Shigruvedas",
@@ -36,12 +41,11 @@ async function getFeaturedProducts() {
     weight: p.product_variants[0]?.weight || "",
     image: p.thumbnail,
     badge: p.category.replace("-", " "),
-    badgeColor: "bg-green-600",
   }))
 }
 
 async function getBlogPosts() {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClientStatic()
   const { data } = await supabase
     .from("blog_posts")
     .select("*")
@@ -57,51 +61,10 @@ async function getBlogPosts() {
   }))
 }
 
-const STATS = [
-  { value: "7+", label: "Acres of Organic Farm" },
-  { value: "90+", label: "Nutrients in Moringa" },
-  { value: "500+", label: "Happy Customers" },
-  { value: "100%", label: "Chemical-Free" },
-]
-
-const FEATURES = [
-  { icon: Leaf, title: "Certified Organic", desc: "No pesticides, no chemicals — ever. Our farm follows strict organic practices." },
-  { icon: Truck, title: "Free Delivery ₹499+", desc: "Fast PAN-India shipping. Orders above ₹499 delivered free to your door." },
-  { icon: Shield, title: "Quality Guaranteed", desc: "Lab-tested for purity. 100% satisfaction or your money back." },
-  { icon: Zap, title: "Farm to Table", desc: "Harvested fresh and dispatched within 24 hours. Maximum nutrition." },
-]
-
 const TESTIMONIALS = [
-  {
-    name: "Priya Sharma",
-    location: "Mumbai",
-    rating: 5,
-    text: "The moringa powder is absolutely incredible — you can taste the freshness. My energy levels have genuinely improved within 2 weeks of using it daily.",
-    avatar: "PS",
-  },
-  {
-    name: "Rajesh Patel",
-    location: "Ahmedabad",
-    rating: 5,
-    text: "Finally found a reliable organic moringa supplier. The drumsticks are so tender and the sambar I made was restaurant quality. Will keep ordering!",
-    avatar: "RP",
-  },
-  {
-    name: "Ananya Singh",
-    location: "Delhi",
-    rating: 5,
-    text: "As a nutritionist I'm very particular about quality. Shigruvedas moringa is the only brand I recommend to my clients. Exceptional quality.",
-    avatar: "AS",
-  },
-]
-
-const BENEFITS = [
-  "7× more Vitamin C than oranges",
-  "4× more Calcium than milk",
-  "2× more Protein than yogurt",
-  "3× more Potassium than bananas",
-  "25× more Iron than spinach",
-  "Rich in all essential amino acids",
+  { name: "Priya Sharma", location: "Mumbai", rating: 5, text: "The moringa powder is absolutely incredible — you can taste the freshness. My energy levels have genuinely improved within 2 weeks.", avatar: "PS" },
+  { name: "Rajesh Patel", location: "Ahmedabad", rating: 5, text: "Finally found a reliable organic moringa supplier. The drumsticks are so tender and the quality is restaurant-grade.", avatar: "RP" },
+  { name: "Ananya Singh", location: "Delhi", rating: 5, text: "As a nutritionist I'm very particular about quality. Shigruvedas is the only brand I recommend for pure moringa.", avatar: "AS" },
 ]
 
 export default async function HomePage() {
@@ -125,323 +88,234 @@ export default async function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="min-h-screen bg-white">
+      
       {/* ─── HERO ─────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-green-950 via-green-900 to-emerald-800 text-white">
-        {/* Decorative blobs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-green-600/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-emerald-500/15 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+      <Hero />
 
-        <div className="relative container mx-auto px-4 py-20 md:py-28 grid lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 text-sm mb-6 backdrop-blur-sm">
-              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              Certified Organic Farm, Udaipur, Rajasthan
+      {/* ─── STATS ────────────────────────────────────────────────── */}
+      <StatsBar />
+
+      {/* ─── HIGHLIGHT PRODUCTS ────────────────────────────────────── */}
+      <section className="py-32 px-4 bg-background">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-16">
+            <div className="max-w-2xl">
+              <Badge className="bg-primary/5 text-primary border-primary/10 mb-4 px-4 py-1">Premium Collection</Badge>
+              <h2 className="text-4xl md:text-6xl font-extrabold tracking-tight mb-4 leading-tight">
+                Farm-Fresh <span className="text-gradient">Essentials</span>
+              </h2>
+              <p className="text-slate-500 text-lg">
+                Crafted with patience, harvested with care. Explore our selection of nature's most nutrient-dense offerings.
+              </p>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
-              Pure Moringa,
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-300 to-emerald-200">
-                Direct from Farm
-              </span>
-            </h1>
-            <p className="text-green-100 text-lg leading-relaxed mb-8 max-w-lg">
-              Freshly harvested from our 7+ acre certified organic moringa farm. 
-              No middlemen, no additives — just nature's most nutrient-dense superfood delivered to your door.
-            </p>
-            <div className="flex flex-wrap gap-3 mb-8">
-              <Link href="/shop">
-                <Button size="lg" className="bg-white text-green-900 hover:bg-green-50 font-bold gap-2 shadow-lg">
-                  Shop Products <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Link href="/b2b">
-                <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm">
-                  B2B Wholesale
-                </Button>
-              </Link>
-            </div>
-            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-green-200">
-              {["✓ Free delivery ₹499+", "✓ Lab-tested quality", "✓ 100% organic"].map((t) => (
-                <span key={t}>{t}</span>
-              ))}
-            </div>
-          </div>
-
-          {/* Hero product showcase */}
-          <div className="relative hidden lg:flex items-center justify-center">
-            <div className="relative w-full max-w-md">
-              {/* Main image */}
-              <div className="relative z-10 bg-gradient-to-br from-green-700/50 to-emerald-800/50 rounded-3xl p-8 backdrop-blur-sm border border-white/10">
-                <Image
-                  src="/images/powder2.png"
-                  alt="Organic Moringa Powder"
-                  width={400}
-                  height={400}
-                  className="w-full drop-shadow-2xl"
-                  priority
-                />
-              </div>
-              {/* Floating badge */}
-              <div className="absolute -top-4 -right-4 z-20 bg-white rounded-2xl shadow-xl p-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <Leaf className="h-4 w-4 text-green-600" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-900">100% Organic</div>
-                    <div className="text-xs text-gray-500">Certified Farm</div>
-                  </div>
-                </div>
-              </div>
-              {/* Rating badge */}
-              <div className="absolute -bottom-4 -left-4 z-20 bg-white rounded-2xl shadow-xl p-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex">
-                    {[1,2,3,4,5].map(i => <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />)}
-                  </div>
-                  <div className="text-xs font-bold text-gray-900">4.9 • 500+ reviews</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats bar */}
-        <div className="relative border-t border-white/10 bg-white/5 backdrop-blur-sm">
-          <div className="container mx-auto px-4 py-5">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              {STATS.map(({ value, label }) => (
-                <div key={label}>
-                  <div className="text-2xl md:text-3xl font-extrabold text-white">{value}</div>
-                  <div className="text-xs text-green-200 mt-0.5">{label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── PRODUCTS ─────────────────────────────────────────────── */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <Badge className="bg-green-100 text-green-700 mb-3">Our Products</Badge>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-3">
-              Farm-Fresh Moringa, <span className="text-green-600">Your Way</span>
-            </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
-              Choose from whole leaves, fine powder, or fresh drumsticks — all grown on our certified organic farm.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            {products.map((product: any) => (
-              <Link key={product.slug} href={`/products/${product.slug}`} className="group">
-                <div className="bg-white rounded-3xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden h-full flex flex-col">
-                  <div className="relative bg-gradient-to-br from-green-50 to-emerald-50 aspect-square overflow-hidden">
-                    <Image
-                      src={product.image || "/images/placeholder.png"}
-                      alt={product.name}
-                      fill
-                      className="object-contain p-10 group-hover:scale-110 transition-transform duration-500"
-                    />
-                    <span className={`absolute top-4 left-4 ${product.badgeColor} text-white text-xs font-bold px-3 py-1 rounded-full capitalize`}>
-                      {product.badge}
-                    </span>
-                  </div>
-                  <div className="p-6 flex flex-col flex-1">
-                    <h3 className="font-bold text-xl text-gray-900 mb-2 group-hover:text-green-700 transition-colors uppercase">{product.name}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-4 flex-1">{product.desc}</p>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-2xl font-extrabold text-gray-900">{product.price}</span>
-                        <span className="text-sm text-gray-400 ml-1">/ {product.weight}</span>
-                      </div>
-                      <span className="flex items-center gap-1 text-green-600 text-sm font-semibold group-hover:gap-2 transition-all">
-                        View <ArrowRight className="h-4 w-4" />
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <Link href="/shop">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white gap-2">
-                View All Products <ArrowRight className="h-4 w-4" />
+            <Link href="/shop" className="group">
+              <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5 rounded-xl gap-2 h-14 px-8">
+                Explore Full Store <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
           </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {products.map((product: any, idx: number) => (
+              <MoringaCard key={product.slug} delay={idx * 0.15} className="group flex flex-col h-full bg-slate-50/50 hover:bg-white">
+                <div className="relative aspect-[4/5] overflow-hidden bg-slate-100/50">
+                  <Image
+                    src={product.image || "/images/placeholder.png"}
+                    alt={product.name}
+                    fill
+                    className="object-contain p-8 group-hover:scale-105 transition-transform duration-700 ease-out"
+                  />
+                  <div className="absolute top-6 left-6">
+                    <Badge className="bg-white/80 backdrop-blur-md text-primary border-none shadow-sm px-4 py-1.5 capitalize font-bold">
+                      {product.badge}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="p-8 flex flex-col flex-1">
+                  <h3 className="text-2xl font-bold mb-3 group-hover:text-primary transition-colors line-clamp-1">{product.name}</h3>
+                  <p className="text-slate-500 text-sm leading-relaxed mb-6 line-clamp-2 flex-1">{product.desc}</p>
+                  <div className="flex items-center justify-between pt-6 border-t border-slate-100">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-black text-slate-900">{product.price}</span>
+                      <span className="text-slate-400 text-xs font-medium">/ {product.weight}</span>
+                    </div>
+                    <Link href={`/products/${product.slug}`}>
+                      <Button size="icon" variant="outline" className="h-12 w-12 rounded-2xl border-slate-200 hover:bg-primary hover:text-white hover:border-primary transition-all group/btn">
+                        <ArrowRight className="h-5 w-5 group-hover/btn:translate-x-0.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </MoringaCard>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* ─── WHY MORINGA ─────────────────────────────────────────── */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid lg:grid-cols-2 gap-14 items-center">
-            <div>
-              <Badge className="bg-green-100 text-green-700 mb-3">Why Moringa?</Badge>
-              <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-                Nature's Most <span className="text-green-600">Nutrient-Dense</span> Superfood
-              </h2>
-              <p className="text-gray-500 leading-relaxed mb-6">
-                Moringa oleifera is called the "Miracle Tree" for a reason. Gram for gram, it packs more vitamins, minerals, and antioxidants than almost any other plant on earth.
-              </p>
-              <ul className="space-y-3 mb-8">
-                {BENEFITS.map((b) => (
-                  <li key={b} className="flex items-center gap-3 text-sm text-gray-700">
-                    <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0" />
-                    {b}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/blog/health-benefits-moringa-powder">
-                <Button variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 gap-2">
-                  Read the Science <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-4">
-                <div className="bg-gradient-to-br from-green-600 to-emerald-600 rounded-3xl p-6 text-white">
-                  <div className="text-4xl font-extrabold mb-1">7×</div>
-                  <div className="text-sm text-green-100">More Vitamin C than oranges</div>
-                </div>
-                <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
-                  <div className="text-4xl font-extrabold text-gray-900 mb-1">25×</div>
-                  <div className="text-sm text-gray-500">More Iron than spinach</div>
-                </div>
-              </div>
-              <div className="space-y-4 mt-8">
-                <div className="bg-gray-50 rounded-3xl p-6 border border-gray-100">
-                  <div className="text-4xl font-extrabold text-gray-900 mb-1">4×</div>
-                  <div className="text-sm text-gray-500">More Calcium than milk</div>
-                </div>
-                <div className="bg-gradient-to-br from-amber-500 to-orange-500 rounded-3xl p-6 text-white">
-                  <div className="text-4xl font-extrabold mb-1">90+</div>
-                  <div className="text-sm text-amber-100">Total nutrients packed in</div>
-                </div>
-              </div>
-            </div>
+      {/* ─── THE MORINGA MIRACLE (BENTO) ────────────────────────────── */}
+      <section className="py-32 px-6 bg-[#FDFEFC] text-foreground overflow-hidden relative">
+        <div className="absolute top-0 left-0 w-full h-full opacity-40 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[150px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-emerald-900/5 rounded-full blur-[150px]" />
+        </div>
+
+        <div className="container mx-auto max-w-7xl relative z-10">
+          <div className="text-center mb-24 max-w-3xl mx-auto space-y-4">
+            <Badge className="bg-primary/10 text-primary border-none mb-4 px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em]">The Alchemical Truth</Badge>
+            <h2 className="text-5xl md:text-7xl font-black mb-8 tracking-tighter italic text-slate-900">
+              A Nutrition <span className="text-primary underline decoration-primary/20 underline-offset-8">Miracle.</span>
+            </h2>
+            <p className="text-slate-500 text-lg font-medium leading-relaxed italic">
+              "Known as the 'Tree of Life,' Moringa oleifera contains over 90 bio-available nutrients, vitamins, and minerals that transcend modern supplementation."
+            </p>
           </div>
+
+          <BentoGrid className="max-w-6xl mx-auto">
+            <BentoItem colSpan={12} className="lg:col-span-7">
+              <MoringaCard glass={true} className="h-full bg-white/40 border-white p-12 flex flex-col justify-end group min-h-[450px] shadow-2xl">
+                <div className="relative z-10">
+                  <div className="h-24 w-24 rounded-[2rem] bg-primary/10 flex items-center justify-center mb-10 group-hover:rotate-12 transition-transform duration-700">
+                    <Leaf className="h-12 w-12 text-primary" />
+                  </div>
+                  <h3 className="text-4xl font-black mb-6 italic text-slate-900 tracking-tighter leading-none">7× More Vitamin C.</h3>
+                  <p className="text-slate-500 leading-relaxed font-medium text-lg max-w-md">
+                    Inoculate your immunity with a Vitamin C concentration seven times higher than fresh oranges in every organic serving.
+                  </p>
+                </div>
+                <div className="absolute -right-20 -bottom-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+              </MoringaCard>
+            </BentoItem>
+            
+            <BentoItem colSpan={12} className="lg:col-span-5 space-y-6">
+              <MoringaCard glass={true} className="bg-white/40 border-white p-10 group shadow-xl">
+                <div className="flex items-center gap-8">
+                  <div className="h-16 w-16 rounded-2xl bg-amber-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Zap className="h-8 w-8 text-amber-600 fill-amber-600/20" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-xl font-black text-slate-900 italic tracking-tight">Energy Protocol</h4>
+                    <p className="text-slate-400 text-sm font-medium">Bio-available Iron for perpetual vitality.</p>
+                  </div>
+                </div>
+              </MoringaCard>
+
+              <MoringaCard glass={true} className="bg-white/40 border-white p-10 group shadow-xl">
+                <div className="flex items-center gap-8">
+                  <div className="h-16 w-16 rounded-2xl bg-rose-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <Heart className="h-8 w-8 text-rose-600 fill-rose-600/20" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-xl font-black text-slate-900 italic tracking-tight">Heart Catalyst</h4>
+                    <p className="text-slate-400 text-sm font-medium">Potassium levels that double organic bananas.</p>
+                  </div>
+                </div>
+              </MoringaCard>
+
+              <MoringaCard glass={true} className="bg-slate-900 p-10 group shadow-2xl border-none">
+                <div className="flex items-center gap-8">
+                  <div className="h-16 w-16 rounded-2xl bg-primary/20 flex items-center justify-center shrink-0">
+                    <Sparkles className="h-8 w-8 text-primary shadow-2xl" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-xl font-black text-white italic tracking-tight">Antioxidant Shield</h4>
+                    <p className="text-slate-400 text-sm font-medium">46 types of pure antioxidant compounds.</p>
+                  </div>
+                </div>
+              </MoringaCard>
+            </BentoItem>
+
+            <BentoItem colSpan={12}>
+              <div className="mt-12 flex flex-wrap justify-center items-center gap-x-12 gap-y-6 px-6 py-10 border-t border-primary/5">
+                {["7× Vitamin C", "4× Calcium", "2× Protein", "3× Potassium", "25× Iron"].map((benefit, i) => (
+                  <motion.div 
+                    key={benefit} 
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex items-center gap-3 group cursor-default"
+                  >
+                    <div className="w-2 h-2 rounded-full bg-primary opacity-30 group-hover:opacity-100 transition-opacity" />
+                    <span className="text-[10px] font-black tracking-[0.4em] uppercase text-slate-400 group-hover:text-primary transition-colors">{benefit}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </BentoItem>
+          </BentoGrid>
         </div>
       </section>
 
       {/* ─── FEATURES ─────────────────────────────────────────────── */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <Badge className="bg-green-100 text-green-700 mb-3">Why Choose Us</Badge>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
-              The Shigruvedas Difference
-            </h2>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURES.map(({ icon: Icon, title, desc }) => (
-              <div key={title} className="bg-white rounded-3xl p-6 border border-gray-100 hover:border-green-200 hover:shadow-lg transition-all group">
-                <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-green-600 transition-colors">
-                  <Icon className="h-6 w-6 text-green-600 group-hover:text-white transition-colors" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <Features />
 
       {/* ─── TESTIMONIALS ─────────────────────────────────────────── */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto max-w-6xl">
-          <div className="text-center mb-12">
-            <Badge className="bg-green-100 text-green-700 mb-3">Customer Stories</Badge>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-2">
-              What Our Customers Say
-            </h2>
-            <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+      <section className="py-32 px-4 bg-slate-50">
+        <div className="container mx-auto max-w-7xl">
+          <div className="text-center mb-20 max-w-2xl mx-auto">
+            <Badge className="bg-primary/5 text-primary border-primary/10 mb-4 px-4 py-1">Community Love</Badge>
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-6 tracking-tight">Voices of <span className="text-gradient">Wellness</span></h2>
+            <div className="flex items-center justify-center gap-2">
               <div className="flex">
-                {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
+                {[1,2,3,4,5].map(i => <Star key={i} className="h-5 w-5 fill-accent text-accent" />)}
               </div>
-              <span>4.9 average from 500+ reviews</span>
+              <span className="font-bold text-slate-900 ml-2">4.9/5 Average</span>
             </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            {TESTIMONIALS.map((t) => (
-              <div key={t.name} className="bg-gray-50 rounded-3xl p-6 border border-gray-100 hover:border-green-200 transition-all">
-                <div className="flex mb-3">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {TESTIMONIALS.map((t, idx) => (
+              <MoringaCard key={t.name} delay={idx * 0.15} className="p-10 bg-white border-slate-100 italic flex flex-col">
+                <div className="flex mb-6">
+                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-accent text-accent" />)}
                 </div>
-                <p className="text-gray-700 text-sm leading-relaxed mb-5 italic">"{t.text}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                <p className="text-slate-600 text-lg leading-relaxed mb-8 flex-1">"{t.text}"</p>
+                <div className="flex items-center gap-4 pt-6 border-t border-slate-50">
+                  <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center text-white font-black text-xs">
                     {t.avatar}
                   </div>
                   <div>
-                    <div className="font-semibold text-gray-900 text-sm">{t.name}</div>
-                    <div className="text-xs text-gray-500">{t.location}</div>
+                    <div className="font-bold text-slate-900">{t.name}</div>
+                    <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">{t.location}</div>
                   </div>
                 </div>
-              </div>
+              </MoringaCard>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── B2B CTA ──────────────────────────────────────────────── */}
-      <section className="py-16 px-4 bg-gradient-to-r from-green-900 to-emerald-800 text-white">
-        <div className="container mx-auto max-w-5xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div>
-            <Badge className="bg-white/20 text-white border-white/30 mb-3">B2B Wholesale</Badge>
-            <h2 className="text-2xl md:text-3xl font-extrabold mb-2">Need Bulk Moringa?</h2>
-            <p className="text-green-100 text-sm">
-              Special pricing for retailers, restaurants, ayurvedic clinics & exporters. Minimum 5kg.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-3 flex-shrink-0">
-            <Link href="/b2b">
-              <Button size="lg" className="bg-white text-green-900 hover:bg-green-50 font-bold">
-                Explore B2B Plans
-              </Button>
-            </Link>
-            <a href="tel:+919166599895">
-              <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2">
-                <Phone className="h-4 w-4" /> Call Us
-              </Button>
-            </a>
           </div>
         </div>
       </section>
 
       {/* ─── BLOG PREVIEW ─────────────────────────────────────────── */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-6xl">
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <Badge className="bg-green-100 text-green-700 mb-2">From The Blog</Badge>
-              <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Health Tips & Recipes</h2>
+      <section className="py-32 px-4 relative overflow-hidden bg-white">
+        <div className="container mx-auto max-w-7xl">
+          <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-20">
+            <div className="max-w-2xl">
+              <Badge className="bg-primary/5 text-primary border-primary/10 mb-4 px-4 py-1">Journal</Badge>
+              <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">The <span className="text-gradient">Green Book</span></h2>
             </div>
-            <Link href="/blog" className="hidden sm:flex items-center gap-1 text-green-600 font-semibold hover:gap-2 transition-all text-sm">
-              View All <ArrowRight className="h-4 w-4" />
+            <Link href="/blog" className="group">
+              <Button variant="ghost" className="text-primary font-bold hover:bg-primary/5 rounded-xl gap-2 h-14 px-8">
+                Read All Stories <ChevronRight className="h-5 w-5" />
+              </Button>
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogPosts.map((post) => (
-              <Link key={post.slug} href={`/blog/${post.slug}`} className="group block">
-                <div className="bg-white rounded-2xl border border-gray-100 hover:border-green-200 shadow-sm hover:shadow-md transition-all overflow-hidden">
-                  <div className="aspect-video bg-gradient-to-br from-green-50 to-emerald-50 overflow-hidden relative">
-                    <Image src={post.image} alt={post.title} fill className="w-full h-full object-cover p-0 group-hover:scale-105 transition-transform duration-500" />
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {blogPosts.map((post, idx) => (
+              <Link key={post.slug} href={`/blog/${post.slug}`} className="group h-full">
+                <MoringaCard delay={idx * 0.1} className="h-full flex flex-col group-hover:scale-[1.01] transition-all">
+                  <div className="aspect-[16/10] relative overflow-hidden">
+                    <Image src={post.image} alt={post.title} fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-white/90 backdrop-blur-md text-primary border-none shadow-sm capitalize font-bold">
+                        {post.cat}
+                      </Badge>
+                    </div>
                   </div>
-                  <div className="p-5">
-                    <Badge className="bg-green-100 text-green-700 text-xs mb-2 capitalize">{post.cat}</Badge>
-                    <h3 className="font-bold text-gray-900 text-sm group-hover:text-green-700 transition-colors line-clamp-2">{post.title}</h3>
-                    <span className="flex items-center gap-1 text-green-600 text-xs font-medium mt-3 group-hover:gap-2 transition-all">
-                      Read more <ChevronRight className="h-3.5 w-3.5" />
-                    </span>
+                  <div className="p-8">
+                    <h3 className="text-xl font-bold group-hover:text-primary transition-colors line-clamp-2 leading-tight">
+                      {post.title}
+                    </h3>
                   </div>
-                </div>
+                </MoringaCard>
               </Link>
             ))}
           </div>
@@ -449,33 +323,47 @@ export default async function HomePage() {
       </section>
 
       {/* ─── FINAL CTA ────────────────────────────────────────────── */}
-      <section className="py-20 px-4 bg-white">
-        <div className="container mx-auto max-w-3xl text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Heart className="h-8 w-8 text-green-600" />
-          </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">
-            Start Your Moringa Journey Today
-          </h2>
-          <p className="text-gray-500 leading-relaxed mb-8 max-w-xl mx-auto">
-            Join 500+ customers who have transformed their wellness routine with our farm-fresh organic moringa. 
-            Free delivery on your first order above ₹499.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Link href="/shop">
-              <Button size="lg" className="bg-green-600 hover:bg-green-700 text-white gap-2 font-bold shadow-lg">
-                Shop Now — Free Delivery <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <a href="https://wa.me/9166599895" target="_blank" rel="noopener noreferrer">
-              <Button size="lg" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50 gap-2">
-                Chat on WhatsApp
-              </Button>
-            </a>
-          </div>
+      <section className="py-32 px-4 relative">
+        <div className="container mx-auto max-w-5xl">
+          <MoringaCard className="bg-gradient-to-br from-primary to-emerald-800 p-12 md:p-24 text-center text-white overflow-hidden shadow-2xl shadow-primary/20" glass={false}>
+            {/* Background Texture */}
+            <div className="absolute inset-0 opacity-10 pointer-events-none">
+              <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                <path d="M0,0 Q50,20 100,0 V100 Q50,80 0,100 Z" fill="currentColor" />
+              </svg>
+            </div>
+            
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              whileInView={{ scale: 1, opacity: 1 }}
+              viewport={{ once: true }}
+              className="relative z-10"
+            >
+              <div className="inline-flex h-20 w-20 rounded-full bg-white/10 items-center justify-center mb-8">
+                <Heart className="h-10 w-10 text-accent animate-pulse" />
+              </div>
+              <h2 className="text-4xl md:text-6xl font-black mb-6 tracking-tighter">
+                Embrace the <span className="text-primary-foreground italic">Miracle</span>
+              </h2>
+              <p className="text-emerald-50/80 text-lg md:text-xl max-w-2xl mx-auto mb-12 font-medium">
+                Join 500+ souls who have transformed their wellness with our farm-fresh organic moringa. Your journey to pure health starts here.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Link href="/shop">
+                  <Button size="lg" className="h-16 px-10 bg-white text-primary hover:bg-emerald-50 rounded-2xl font-bold text-lg shadow-xl group">
+                    Shop Now <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+                <a href="https://wa.me/9166599895" target="_blank" rel="noopener noreferrer">
+                  <Button size="lg" variant="outline" className="h-16 px-10 border-white/20 text-white hover:bg-white/10 rounded-2xl font-bold backdrop-blur-md">
+                    Chat with Us
+                  </Button>
+                </a>
+              </div>
+            </motion.div>
+          </MoringaCard>
         </div>
       </section>
-    </div>
     </>
   )
 }

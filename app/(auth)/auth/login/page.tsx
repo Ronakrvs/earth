@@ -11,11 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Leaf } from "lucide-react"
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Mail, Lock, LogIn, Sparkles } from "lucide-react"
+import * as motion from "framer-motion/client"
 
 const schema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  email: z.string().email("Please enter a valid alchemical identifier"),
+  password: z.string().min(6, "Passphrase must be at least 6 characters"),
 })
 type FormData = z.infer<typeof schema>
 
@@ -24,7 +25,6 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const callbackUrl = (() => {
     const raw = searchParams.get("callbackUrl") || "/"
-    // Never redirect back to /api/* paths
     if (raw.startsWith("/api")) return "/"
     return raw
   })()
@@ -47,7 +47,7 @@ function LoginForm() {
       redirect: false,
     })
     if (result?.error) {
-      setServerError("Invalid email or password. Please try again.")
+      setServerError("Authentication failed. Invalid credentials.")
     } else {
       router.push(callbackUrl)
       router.refresh()
@@ -60,40 +60,43 @@ function LoginForm() {
   }
 
   return (
-    <div>
-      {/* Icon */}
-      <div className="flex justify-center mb-6">
-        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-          <Leaf className="h-6 w-6 text-green-600" />
-        </div>
+    <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="space-y-8"
+    >
+      <div className="text-center">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tighter italic">Authentication.</h1>
+        <p className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400 mt-2">Resume your botanical journey</p>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Welcome back</h1>
-      <p className="text-sm text-gray-500 text-center mb-6">
-        Sign in to your Shigruvedas account
-      </p>
-
-      {/* Email confirmed success */}
       {isConfirmed && (
-        <div className="flex items-center gap-2 text-green-700 bg-green-50 border border-green-200 rounded-lg p-3 mb-4 text-sm">
+        <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest"
+        >
           <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-          Email confirmed! You can now sign in below.
-        </div>
+          Email Verified. Proceed to Login.
+        </motion.div>
       )}
 
-      {/* Error */}
       {serverError && (
-        <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm">
+        <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 text-red-600 bg-red-50 border border-red-100 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest"
+        >
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           {serverError}
-        </div>
+        </motion.div>
       )}
 
-      {/* Google */}
+      {/* Google Protocol */}
       <Button
         type="button"
         variant="outline"
-        className="w-full mb-4 border-gray-300 hover:bg-gray-50 gap-2"
+        className="w-full h-14 rounded-2xl border-slate-100 hover:bg-slate-50 gap-4 font-black text-xs uppercase tracking-widest transition-all shadow-sm"
         onClick={handleGoogleSignIn}
         disabled={isGoogleLoading}
       >
@@ -110,84 +113,99 @@ function LoginForm() {
         Continue with Google
       </Button>
 
-      <div className="relative mb-4">
-        <Separator />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-2 text-xs text-gray-400">
-          or
+      <div className="relative">
+        <Separator className="bg-slate-50" />
+        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-[8px] font-black uppercase tracking-[0.3em] text-slate-300">
+          Neural Bypass
         </span>
       </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email address</Label>
-          <Input
-            id="email"
-            type="email"
-            placeholder="you@example.com"
-            className="mt-1"
-            {...register("email")}
-          />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 text-left">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Identifier</Label>
+          <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@nexus.com"
+                className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none"
+                {...register("email")}
+              />
+          </div>
           {errors.email && (
-            <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+            <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{errors.email.message}</p>
           )}
         </div>
 
-        <div>
-          <div className="flex justify-between items-center">
-            <Label htmlFor="password">Password</Label>
+        <div className="space-y-2">
+          <div className="flex justify-between items-center px-4">
+            <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400">Security Key</Label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs text-green-600 hover:underline"
+              className="text-[10px] font-black uppercase tracking-widest text-primary hover:text-emerald-900 transition-colors"
             >
-              Forgot password?
+              Lost Logic?
             </Link>
           </div>
-          <div className="relative mt-1">
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
               placeholder="••••••••"
+              className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none"
               {...register("password")}
             />
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500"
               onClick={() => setShowPassword(!showPassword)}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
           {errors.password && (
-            <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
+            <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{errors.password.message}</p>
           )}
         </div>
 
         <Button
           type="submit"
-          className="w-full bg-green-600 hover:bg-green-700 text-white"
+          className="w-full h-16 bg-primary text-white hover:bg-emerald-900 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-primary/10 transition-all active:scale-95 group border-none"
           disabled={isSubmitting}
         >
-          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-          Sign In
+          {isSubmitting ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <span className="flex items-center gap-3">
+                Secure Entry <LogIn className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+            </span>
+          )}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-500 mt-6">
-        Don&apos;t have an account?{" "}
-        <Link href="/auth/signup" className="text-green-600 font-medium hover:underline">
-          Create one free
-        </Link>
-      </p>
-    </div>
+      <div className="text-center pt-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            Uninitiated?{" "}
+            <Link href="/auth/signup" className="text-primary hover:text-emerald-900 transition-colors underline underline-offset-4">
+                Manifest Profile
+            </Link>
+          </p>
+      </div>
+    </motion.div>
   )
 }
 
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      <div className="flex flex-col items-center justify-center p-12 gap-6">
+        <div className="relative w-16 h-16">
+            <div className="absolute inset-0 border-4 border-slate-100 rounded-full" />
+            <div className="absolute inset-0 border-4 border-primary rounded-full border-t-transparent animate-spin" />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 animate-pulse">Initializing Protocol...</span>
       </div>
     }>
       <LoginForm />

@@ -9,13 +9,14 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock } from "lucide-react"
+import { AlertCircle, CheckCircle2, Eye, EyeOff, Loader2, Lock, ShieldCheck, Sparkles } from "lucide-react"
+import * as motion from "framer-motion/client"
 
 const schema = z.object({
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, "Security key must be at least 8 characters"),
   confirm_password: z.string(),
 }).refine((d) => d.password === d.confirm_password, {
-  message: "Passwords don't match",
+  message: "Security keys do not match",
   path: ["confirm_password"],
 })
 type FormData = z.infer<typeof schema>
@@ -39,70 +40,107 @@ export default function ResetPasswordPage() {
       setServerError(error.message)
     } else {
       setSuccess(true)
-      setTimeout(() => router.push("/auth/login"), 2000)
+      setTimeout(() => router.push("/auth/login"), 2500)
     }
   }
 
   if (success) {
     return (
-      <div className="text-center py-4">
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
-          </div>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center py-8 space-y-8"
+      >
+        <div className="flex justify-center">
+            <div className="w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center border border-primary/20 shadow-2xl shadow-primary/10">
+                <ShieldCheck className="h-10 w-10 text-primary" />
+            </div>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Password updated!</h2>
-        <p className="text-sm text-gray-500">Redirecting you to login...</p>
-      </div>
+        <div className="space-y-3">
+            <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter">Logic Restored.</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Security protocol updated successfully.</p>
+        </div>
+        <div className="flex flex-col items-center gap-4">
+             <p className="text-sm text-slate-500 font-medium italic">"Redirecting to secure entry..."</p>
+             <Loader2 className="h-5 w-5 animate-spin text-primary/40" />
+        </div>
+      </motion.div>
     )
   }
 
   return (
-    <div>
-      <div className="flex justify-center mb-6">
-        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-          <Lock className="h-6 w-6 text-blue-600" />
-        </div>
+    <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="space-y-8"
+    >
+      <div className="text-center">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tighter italic">Restoring Access.</h1>
+        <p className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400 mt-2">Redefine your botanical security</p>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Set new password</h1>
-      <p className="text-sm text-gray-500 text-center mb-6">
-        Choose a strong password for your account
-      </p>
-
       {serverError && (
-        <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm">
+        <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 text-red-600 bg-red-50 border border-red-100 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest"
+        >
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           {serverError}
-        </div>
+        </motion.div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="password">New Password</Label>
-          <div className="relative mt-1">
-            <Input id="password" type={showPassword ? "text" : "password"} placeholder="Min 8 characters" {...register("password")} />
-            <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" onClick={() => setShowPassword(!showPassword)}>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 text-left">
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">New Security Logic</Label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <Input 
+                id="password" 
+                type={showPassword ? "text" : "password"} 
+                placeholder="Minimum 8 characters" 
+                className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none" 
+                {...register("password")} 
+            />
+            <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" onClick={() => setShowPassword(!showPassword)}>
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>}
+          {errors.password && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{errors.password.message}</p>}
         </div>
-        <div>
-          <Label htmlFor="confirm_password">Confirm New Password</Label>
-          <div className="relative mt-1">
-            <Input id="confirm_password" type={showConfirm ? "text" : "password"} placeholder="Re-enter password" {...register("confirm_password")} />
-            <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" onClick={() => setShowConfirm(!showConfirm)}>
+
+        <div className="space-y-2">
+          <Label htmlFor="confirm_password" className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Confirm New Logic</Label>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+            <Input 
+                id="confirm_password" 
+                type={showConfirm ? "text" : "password"} 
+                placeholder="Re-enter logic protocol" 
+                className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none" 
+                {...register("confirm_password")} 
+            />
+            <button type="button" className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300" onClick={() => setShowConfirm(!showConfirm)}>
               {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
-          {errors.confirm_password && <p className="text-red-500 text-xs mt-1">{errors.confirm_password.message}</p>}
+          {errors.confirm_password && <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{errors.confirm_password.message}</p>}
         </div>
-        <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Update Password
+
+        <Button 
+            type="submit" 
+            className="w-full h-16 bg-primary text-white hover:bg-emerald-900 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-primary/10 transition-all active:scale-95 group border-none" 
+            disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <span className="flex items-center gap-3">
+                Update Protocol <ShieldCheck className="h-5 w-5 group-hover:scale-110 transition-transform" />
+            </span>
+          )}
         </Button>
       </form>
-    </div>
+    </motion.div>
   )
 }

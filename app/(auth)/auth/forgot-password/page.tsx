@@ -9,10 +9,11 @@ import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, CheckCircle2, Loader2, Mail } from "lucide-react"
+import { AlertCircle, CheckCircle2, Loader2, Mail, Sparkles, ArrowRight, RefreshCcw } from "lucide-react"
+import * as motion from "framer-motion/client"
 
 const schema = z.object({
-  email: z.string().email("Please enter a valid email address"),
+  email: z.string().email("Please enter a valid alchemical identifier"),
 })
 type FormData = z.infer<typeof schema>
 
@@ -39,59 +40,93 @@ export default function ForgotPasswordPage() {
 
   if (success) {
     return (
-      <div className="text-center py-4">
-        <div className="flex justify-center mb-4">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-            <CheckCircle2 className="h-8 w-8 text-green-600" />
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center py-8 space-y-8"
+      >
+        <div className="flex justify-center">
+          <div className="w-24 h-24 bg-primary/10 rounded-[2.5rem] flex items-center justify-center border border-primary/20 shadow-2xl shadow-primary/10">
+            <Mail className="h-10 w-10 text-primary" />
           </div>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Check your inbox</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          We sent a password reset link to your email address. Check it and follow the instructions.
+        <div className="space-y-3">
+            <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter">Nexus Transversal.</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Recovery link dispatched to your portal.</p>
+        </div>
+        <p className="text-sm text-slate-500 font-medium italic leading-relaxed">
+           "Engage the secure cryptographic link transmitted to your correspondence to restore your botanical logic."
         </p>
-        <Link href="/auth/login">
-          <Button variant="outline" className="w-full">Back to Login</Button>
+        <Link href="/auth/login" className="block w-full">
+          <Button className="w-full h-16 bg-primary text-white hover:bg-emerald-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-primary/10 transition-all border-none">
+            Return to Entry
+          </Button>
         </Link>
-      </div>
+      </motion.div>
     )
   }
 
   return (
-    <div>
-      <div className="flex justify-center mb-6">
-        <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
-          <Mail className="h-6 w-6 text-orange-600" />
-        </div>
+    <motion.div 
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="space-y-8"
+    >
+      <div className="text-center">
+        <h1 className="text-3xl font-black text-slate-900 tracking-tighter italic">Logic Restoration.</h1>
+        <p className="text-[10px] font-black tracking-[0.3em] uppercase text-slate-400 mt-2">Recover your botanical access</p>
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 text-center mb-1">Forgot your password?</h1>
-      <p className="text-sm text-gray-500 text-center mb-6">
-        Enter your email and we&apos;ll send you a reset link
-      </p>
-
       {serverError && (
-        <div className="flex items-center gap-2 text-red-600 bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm">
+        <motion.div 
+            initial={{ opacity: 0, y: -10 }} 
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 text-red-600 bg-red-50 border border-red-100 rounded-2xl p-4 text-[10px] font-black uppercase tracking-widest"
+        >
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
           {serverError}
-        </div>
+        </motion.div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label htmlFor="email">Email address</Label>
-          <Input id="email" type="email" placeholder="you@example.com" className="mt-1" {...register("email")} />
-          {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 text-left">
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Identification Marker</Label>
+          <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@nexus.com"
+                className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none"
+                {...register("email")}
+              />
+          </div>
+          {errors.email && (
+            <p className="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 pl-4">{errors.email.message}</p>
+          )}
         </div>
-        <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={isSubmitting}>
-          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-          Send Reset Link
+
+        <Button
+          type="submit"
+          className="w-full h-16 bg-primary text-white hover:bg-emerald-900 rounded-2xl font-black text-sm uppercase tracking-[0.2em] shadow-xl shadow-primary/10 transition-all active:scale-95 group border-none"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <span className="flex items-center gap-3">
+                Initiate Restoration <RefreshCcw className="h-5 w-5 group-hover:rotate-180 transition-transform duration-700" />
+            </span>
+          )}
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-500 mt-6">
-        Remember your password?{" "}
-        <Link href="/auth/login" className="text-green-600 font-medium hover:underline">Sign in</Link>
-      </p>
-    </div>
+      <div className="text-center pt-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+            Remembered your logic?{" "}
+            <Link href="/auth/login" className="text-primary hover:text-emerald-900 transition-colors underline underline-offset-4">Sign in</Link>
+          </p>
+      </div>
+    </motion.div>
   )
 }
