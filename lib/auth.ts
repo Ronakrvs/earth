@@ -69,7 +69,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id
-        token.role = (user as any).role || "customer"
+        token.email = user.email
+        
+        // Initial role check
+        const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
+        if (user.email && adminEmails.includes(user.email.toLowerCase())) {
+          token.role = "admin"
+        } else {
+          token.role = (user as any).role || "customer"
+        }
       }
       
       if (trigger === "update" && session?.user?.role) {
@@ -105,10 +113,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (profile?.role) {
               session.user.role = profile.role
             } else {
-              session.user.role = (token.role as string) || "customer"
+              // Fallback: Check by email if ID lookup fails or returns no role
+              // Useful for OAuth users who might not have a profile record yet
+              const { data: emailProfile } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("email", token.email)
+                .maybeSingle()
+              
+              if (emailProfile?.role) {
+                session.user.role = emailProfile.role
+              } else {
+                // Secondary fallback: Admin emails env var
+                const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
+                if (token.email && adminEmails.includes((token.email as string).toLowerCase())) {
+                   session.user.role = "admin"
+                } else {
+                   session.user.role = (token.role as string) || "customer"
+                }
+              }
             }
           } else {
-            session.user.role = (token.role as string) || "customer"
+            // Fallback: Admin emails env var if Supabase client cannot be created
+            const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
+            if (token.email && adminEmails.includes((token.email as string).toLowerCase())) {
+              session.user.role = "admin"
+            } else {
+              session.user.role = (token.role as string) || "customer"
+            }
           }
         } catch (error) {
           console.error("Error fetching role for session:", error)
