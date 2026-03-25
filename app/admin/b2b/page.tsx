@@ -24,26 +24,18 @@ export default async function AdminB2BPage() {
     .order("created_at", { ascending: false })
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Back
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                <ArrowUpRight className="h-5 w-5 text-indigo-700" />
-              </div>
-              <h1 className="text-2xl font-bold">B2B Inquiries</h1>
-            </div>
-          </div>
+    <div className="space-y-8">
+      <div className="flex items-center gap-4">
+        <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
+          <ArrowUpRight className="h-6 w-6 text-indigo-700" />
         </div>
-
-        <InquiriesList initialInquiries={inquiries || []} />
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">B2B Inquiries</h1>
+          <p className="text-slate-500 font-medium text-sm">Manage bulk business requests and leads.</p>
+        </div>
       </div>
+
+      <InquiriesList initialInquiries={inquiries || []} />
     </div>
   )
 }

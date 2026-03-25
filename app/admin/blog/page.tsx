@@ -24,31 +24,25 @@ export default async function AdminBlogPage() {
     .order("created_at", { ascending: false })
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-6">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-4">
-            <Link href="/admin">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" /> Back
-              </Button>
-            </Link>
-            <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-                <BookOpen className="h-5 w-5 text-blue-700" />
-              </div>
-              <h1 className="text-2xl font-bold">Blog Management</h1>
-            </div>
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center">
+            <BookOpen className="h-6 w-6 text-emerald-700" />
           </div>
-          <Link href="/admin/blog/new">
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" /> New Post
-            </Button>
-          </Link>
+          <div>
+            <h1 className="text-3xl font-black text-slate-900 tracking-tight">Blog Posts</h1>
+            <p className="text-slate-500 font-medium text-sm">Manage your wellness journal and updates.</p>
+          </div>
         </div>
-
-        <BlogList initialPosts={posts || []} />
+        <Link href="/admin/blog/new">
+          <Button className="bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold px-6">
+            New Post
+          </Button>
+        </Link>
       </div>
+
+      <BlogList initialPosts={posts || []} />
     </div>
   )
 }
