@@ -75,6 +75,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
         if (user.email && adminEmails.includes(user.email.toLowerCase())) {
           token.role = "admin"
+          console.log(`[auth/jwt] Admin role assigned by email: ${user.email}`)
         } else {
           token.role = (user as any).role || "customer"
         }
@@ -112,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             
             if (profile?.role) {
               session.user.role = profile.role
+              console.log(`[auth/session] Role from profile: ${profile.role}`)
             } else {
               // Fallback: Check by email if ID lookup fails or returns no role
               // Useful for OAuth users who might not have a profile record yet
@@ -123,13 +125,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               
               if (emailProfile?.role) {
                 session.user.role = emailProfile.role
+                console.log(`[auth/session] Role from email profile: ${emailProfile.role}`)
               } else {
                 // Secondary fallback: Admin emails env var
                 const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
                 if (token.email && adminEmails.includes((token.email as string).toLowerCase())) {
                    session.user.role = "admin"
+                   console.log(`[auth/session] Role assigned by ADMIN_EMAILS: admin`)
                 } else {
                    session.user.role = (token.role as string) || "customer"
+                   console.log(`[auth/session] Falling back to token role: ${session.user.role}`)
                 }
               }
             }

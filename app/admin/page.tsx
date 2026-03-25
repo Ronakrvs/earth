@@ -21,8 +21,9 @@ export default async function AdminDashboard() {
     .select('role')
     .eq('id', session.user.id)
     .single()
-console.log("prod",profile)
-  if (profile?.role !== "admin") redirect("/")
+
+  const userRole = profile?.role || session.user.role
+  if (userRole !== "admin") redirect("/")
 
   const stats = [
     { label: "Total Orders", value: "—", change: "+0%", icon: Package, color: "bg-blue-500", link: "/admin/orders" },
