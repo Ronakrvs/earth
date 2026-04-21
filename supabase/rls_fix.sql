@@ -20,10 +20,14 @@ DROP POLICY IF EXISTS "profiles_select_admin" ON public.profiles;
 CREATE POLICY "profiles_select_admin" ON public.profiles FOR SELECT USING (is_admin());
 
 -- 3. Update Products policies
+DROP POLICY IF EXISTS "products_select_public" ON public.products;
+CREATE POLICY "products_select_public" ON public.products FOR SELECT USING (COALESCE(is_active, true) = true);
 DROP POLICY IF EXISTS "products_all_admin" ON public.products;
 CREATE POLICY "products_all_admin" ON public.products FOR ALL USING (is_admin());
 
 -- 4. Update Product Variants policies
+DROP POLICY IF EXISTS "variants_select_public" ON public.product_variants;
+CREATE POLICY "variants_select_public" ON public.product_variants FOR SELECT USING (COALESCE(is_active, true) = true);
 DROP POLICY IF EXISTS "variants_all_admin" ON public.product_variants;
 CREATE POLICY "variants_all_admin" ON public.product_variants FOR ALL USING (is_admin());
 

@@ -3,24 +3,24 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Leaf, Star, ArrowRight } from "lucide-react"
 import ProductCard from "@/components/shop/ProductCard"
+import BundleCard from "@/components/shop/BundleCard"
 import SortSelect from "@/components/shop/SortSelect"
-import { createSimpleClient } from "@/lib/supabase/client"
+import { createAdminClient } from "@/lib/supabase/server"
 import { cn } from "@/lib/utils"
+import * as motion from "framer-motion/client"
+import { MoringaCard } from "@/components/ui/moringa-card"
 
 const CATEGORIES = [
   { value: "all", label: "All Products" },
   { value: "moringa-powder", label: "Moringa Powder" },
   { value: "moringa-leaves", label: "Moringa Leaves" },
-  { value: "drumsticks", label: "Drumsticks" },
+  // { value: "drumsticks", label: "Drumsticks" },
 ]
 
 export const metadata: Metadata = {
   title: "Shop Organic Moringa Products | Shigruvedas",
   description: "Browse our range of organic moringa powder, fresh leaves, and drumsticks. Multiple weight options, competitive pricing, free delivery across India.",
 }
-
-import * as motion from "framer-motion/client"
-import { MoringaCard } from "@/components/ui/moringa-card"
 
 export default async function ShopPage({
   searchParams,
@@ -30,8 +30,41 @@ export default async function ShopPage({
   const resolvedSearchParams = await searchParams
   const activeCategory = resolvedSearchParams.category || "all"
   const activeSort = resolvedSearchParams.sort || "featured"
-  const supabase = createSimpleClient()
+  const supabase = await createAdminClient()
   
+  // Fetch settings for feature toggles
+  const { data: settingsData, error: settingsError } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", "config")
+    .maybeSingle()
+  
+  // Default to enabled features if settings table is missing or doesn't have the config key
+  const config = settingsData?.value || {
+    announcement_text: "🌿 Premium Organic Moringa - Farm Fresh & Nutrient Dense",
+    announcement_link: "/shop",
+    subscription_enabled: true,
+    referral_enabled: true,
+    loyalty_enabled: true,
+    coupon_enabled: true,
+    bundles_enabled: true
+  }
+  
+  // Conditional Bundles Fetch
+  let bundles: any[] = []
+  if (config.bundles_enabled !== false) {
+    const { data: bData } = await supabase
+      .from("bundles")
+      .select(`
+        *,
+        bundle_items (
+          product_variants ( price )
+        )
+      `)
+      .eq("is_active", true)
+    bundles = bData || []
+  }
+
   let query = supabase
     .from("products")
     .select(`
@@ -44,7 +77,11 @@ export default async function ShopPage({
     query = query.eq("category", activeCategory)
   }
 
-  const { data: products } = await query
+  const { data: products, error } = await query
+
+  if (error) {
+    console.error("Shop page products error:", error.message)
+  }
 
   const sortedProducts = [...(products || [])].sort((a, b) => {
     if (activeSort === "price-asc") {
@@ -118,6 +155,18 @@ export default async function ShopPage({
                   {cat.label}
                 </Link>
               ))}
+              
+              {config.bundles_enabled !== false && (
+                <Link
+                  href="/shop?category=bundles"
+                  className={cn(
+                    "px-6 py-2.5 rounded-2xl text-[13px] font-black uppercase tracking-wider transition-all duration-300 bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100",
+                    activeCategory === "bundles" && "bg-amber-500 text-white border-amber-500 shadow-xl shadow-amber-200 scale-105"
+                  )}
+                >
+                  Value Bundles
+                </Link>
+              )}
             </div>
 
             {/* Sort Dropdown */}
@@ -136,19 +185,32 @@ export default async function ShopPage({
             <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-100 to-transparent" />
           </div>
 
-          {/* Product Grid */}
+          {/* Product/Bundle Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
-            {sortedProducts.map((product, idx) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: (idx % 4) * 0.1 }}
-              >
-                <ProductCard product={product as any} />
-              </motion.div>
-            ))}
+            {activeCategory === "bundles" ? (
+              bundles.map((bundle, idx) => (
+                <motion.div
+                  key={bundle.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
+                  <BundleCard bundle={bundle} />
+                </motion.div>
+              ))
+            ) : (
+              sortedProducts.map((product, idx) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: (idx % 4) * 0.1 }}
+                >
+                  <ProductCard product={product as any} />
+                </motion.div>
+              ))
+            )}
           </div>
 
           {/* Empty State */}

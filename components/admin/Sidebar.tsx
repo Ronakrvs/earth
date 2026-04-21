@@ -20,7 +20,15 @@ import {
   ChevronRight,
   X,
   Menu,
-  Leaf
+  Leaf,
+  Mail,
+  Ticket,
+  Coins,
+  UserPlus,
+  MapPin,
+  RefreshCw,
+  Boxes,
+  Trees
 } from "lucide-react"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -33,6 +41,14 @@ const menuItems = [
   { label: "Orders", href: "/admin/orders", icon: Package },
   { label: "Inventory", href: "/admin/inventory", icon: AlertTriangle },
   { label: "B2B Inquiries", href: "/admin/b2b", icon: ArrowUpRight },
+  { label: "Newsletter", href: "/admin/newsletter", icon: Mail },
+  { label: "Coupons", href: "/admin/coupons", icon: Ticket },
+  { label: "Loyalty", href: "/admin/loyalty", icon: Coins },
+  { label: "Referrals", href: "/admin/referrals", icon: UserPlus },
+  { label: "Contract Farming", href: "/admin/contract-farming", icon: Trees },
+  { label: "Farm Visits", href: "/admin/farm-visits", icon: MapPin },
+  { label: "Subscriptions", href: "/admin/subscriptions", icon: RefreshCw },
+  { label: "Bundles", href: "/admin/bundles", icon: Boxes },
   { label: "Users", href: "/admin/users", icon: Users },
   { label: "Reviews", href: "/admin/reviews", icon: Star },
   { label: "Blog Posts", href: "/admin/blog", icon: BookOpen },

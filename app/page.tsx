@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import {
     ArrowRight, Leaf, Star, CheckCircle2, Heart, Phone, ChevronRight, Zap, Sparkles
 } from "lucide-react"
-import { createSimpleClient } from "@/lib/supabase/client"
+import { cn } from "@/lib/utils"
 import { createAdminClientStatic } from "@/lib/supabase/server"
 import Hero from "@/components/home/Hero"
 import StatsBar from "@/components/home/StatsBar"
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 }
 
 async function getFeaturedProducts() {
-  const supabase = createSimpleClient()
+  const supabase = createAdminClientStatic()
   const { data } = await supabase
     .from("products")
     .select(`
@@ -33,15 +33,21 @@ async function getFeaturedProducts() {
     .eq("is_featured", true)
     .limit(3)
   
-  return (data || []).map((p: any) => ({
-    name: p.name,
-    slug: p.slug,
-    desc: p.short_description,
-    price: `₹${Math.min(...p.product_variants.map((v: any) => v.price))}`,
-    weight: p.product_variants[0]?.weight || "",
-    image: p.thumbnail,
-    badge: p.category.replace("-", " "),
-  }))
+  return (data || []).map((p: any) => {
+    const variants = p.product_variants || []
+    const prices = variants.map((v: any) => v.price)
+    const minPrice = prices.length > 0 ? Math.min(...prices) : 0
+    
+    return {
+      name: p.name,
+      slug: p.slug,
+      desc: p.short_description,
+      price: `₹${minPrice}`,
+      weight: variants[0]?.weight || "",
+      image: p.thumbnail,
+      badge: (p.category || "General").replace("-", " "),
+    }
+  })
 }
 
 async function getBlogPosts() {
@@ -61,6 +67,35 @@ async function getBlogPosts() {
   }))
 }
 
+async function getLatestReviews() {
+  const supabase = createAdminClientStatic()
+  const { data } = await supabase
+    .from("reviews")
+    .select(`
+      id,
+      rating,
+      content,
+      created_at,
+      profiles (
+        full_name,
+        avatar_url
+      )
+    `)
+    .eq("is_approved", true)
+    .order("created_at", { ascending: false })
+    .limit(3)
+
+  if (!data || data.length === 0) return null
+
+  return data.map((r: any) => ({
+    name: r.profiles?.full_name || "Anonymous",
+    location: "Verified Buyer",
+    rating: r.rating,
+    text: r.content,
+    avatar: r.profiles?.full_name?.[0].toUpperCase() || "U"
+  }))
+}
+
 const TESTIMONIALS = [
   { name: "Priya Sharma", location: "Mumbai", rating: 5, text: "The moringa powder is absolutely incredible — you can taste the freshness. My energy levels have genuinely improved within 2 weeks.", avatar: "PS" },
   { name: "Rajesh Patel", location: "Ahmedabad", rating: 5, text: "Finally found a reliable organic moringa supplier. The drumsticks are so tender and the quality is restaurant-grade.", avatar: "RP" },
@@ -70,6 +105,8 @@ const TESTIMONIALS = [
 export default async function HomePage() {
   const products = await getFeaturedProducts()
   const blogPosts = await getBlogPosts()
+  const latestReviews = await getLatestReviews()
+  const testimonials = latestReviews || TESTIMONIALS
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -262,10 +299,10 @@ export default async function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {TESTIMONIALS.map((t, idx) => (
-              <MoringaCard key={t.name} delay={idx * 0.15} className="p-10 bg-white border-slate-100 italic flex flex-col">
+            {testimonials.map((t, idx) => (
+              <MoringaCard key={idx} delay={idx * 0.15} className="p-10 bg-white border-slate-100 italic flex flex-col">
                 <div className="flex mb-6">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="h-4 w-4 fill-accent text-accent" />)}
+                  {[1,2,3,4,5].map(i => <Star key={i} className={cn("h-4 w-4", i <= t.rating ? "fill-accent text-accent" : "fill-slate-100 text-slate-100")} />)}
                 </div>
                 <p className="text-slate-600 text-lg leading-relaxed mb-8 flex-1">"{t.text}"</p>
                 <div className="flex items-center gap-4 pt-6 border-t border-slate-50">
@@ -283,7 +320,65 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ─── SUBSCRIBE & SAVE ─────────────────────────────────────── */}
+      <section className="py-24 px-4 bg-white">
+        <div className="container mx-auto max-w-5xl">
+          <div className="rounded-[2.5rem] bg-gradient-to-br from-primary to-emerald-800 p-10 md:p-16 grid md:grid-cols-2 gap-10 items-center overflow-hidden relative shadow-2xl shadow-primary/20">
+            {/* Decorative bg circle */}
+            <div className="absolute -right-20 -top-20 w-72 h-72 bg-white/5 rounded-full" />
+            <div className="absolute -left-10 -bottom-10 w-48 h-48 bg-white/5 rounded-full" />
+
+            <div className="relative z-10 text-white">
+              <Badge className="bg-white/15 text-white border-none mb-5 px-4 py-1.5 text-xs font-black uppercase tracking-widest">
+                🌿 Subscribe & Save
+              </Badge>
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-5 leading-tight">
+                Never Run Out of Moringa
+              </h2>
+              <p className="text-emerald-100/80 text-lg font-medium mb-8 leading-relaxed">
+                Set it up once. Get farm-fresh moringa delivered to your door every 30, 60, or 90 days.
+                <strong className="text-white"> Save 15% on every order</strong> — cancel or pause any time.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {["15% off every delivery", "Free shipping included", "Pause or cancel anytime", "Priority dispatch from our farm"].map((b) => (
+                  <li key={b} className="flex items-center gap-3 text-emerald-50 font-medium">
+                    <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
+                    {b}
+                  </li>
+                ))}
+              </ul>
+              <Link href="/shop">
+                <Button className="bg-white text-primary hover:bg-emerald-50 h-14 px-10 rounded-2xl font-black text-base shadow-xl">
+                  Start Subscription →
+                </Button>
+              </Link>
+            </div>
+
+            <div className="relative z-10 hidden md:flex flex-col gap-4">
+              {[
+                { label: "Monthly", freq: "Every 30 days", save: "Save ₹30/month", price: "₹169" },
+                { label: "Bi-Monthly", freq: "Every 60 days", save: "Save ₹60/order", price: "₹169", popular: true },
+                { label: "Quarterly", freq: "Every 90 days", save: "Save ₹90/order", price: "₹169" },
+              ].map((plan) => (
+                <div key={plan.label} className={`rounded-2xl px-6 py-4 flex items-center justify-between gap-4 ${plan.popular ? "bg-white text-slate-900 shadow-xl" : "bg-white/10 text-white"}`}>
+                  <div>
+                    <p className={`font-black text-lg ${plan.popular ? "text-slate-900" : "text-white"}`}>{plan.label}</p>
+                    <p className={`text-sm font-medium ${plan.popular ? "text-slate-500" : "text-emerald-200"}`}>{plan.freq}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-black text-xl ${plan.popular ? "text-primary" : "text-white"}`}>{plan.price}<span className="text-sm font-medium">/100g</span></p>
+                    <p className={`text-xs font-bold ${plan.popular ? "text-emerald-600" : "text-emerald-300"}`}>{plan.save}</p>
+                  </div>
+                  {plan.popular && <Badge className="bg-primary text-white border-none text-[10px] font-black">Popular</Badge>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ─── BLOG PREVIEW ─────────────────────────────────────────── */}
+
       <section className="py-32 px-4 relative overflow-hidden bg-white">
         <div className="container mx-auto max-w-7xl">
           <div className="flex flex-col md:flex-row items-end justify-between gap-6 mb-20">

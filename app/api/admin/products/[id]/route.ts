@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { createAdminClient } from "@/lib/supabase/server"
+import { isAdminSession } from "@/lib/admin-auth"
 
 export async function PATCH(
   req: Request,
@@ -18,7 +19,7 @@ export async function PATCH(
       .eq('id', session?.user?.id || '')
       .single()
 
-    if (profile?.role !== "admin") {
+    if (!isAdminSession(session, profile?.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -78,7 +79,7 @@ export async function DELETE(
       .eq('id', session?.user?.id || '')
       .single()
 
-    if (profile?.role !== "admin") {
+    if (!isAdminSession(session, profile?.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 

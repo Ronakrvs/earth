@@ -4,18 +4,20 @@ import Link from "next/link"
 import { ChevronRight, Home } from "lucide-react"
 import ProductDetailClient from "@/components/shop/ProductDetailClient"
 import ProductCard from "@/components/shop/ProductCard"
-import { createClient } from "@/lib/supabase/server"
-import { createSimpleClient } from "@/lib/supabase/client"
+import ProductReviews from "@/components/shop/ProductReviews"
+import { createAdminClientStatic } from "@/lib/supabase/server"
+
+export const dynamic = "force-dynamic"
 
 export async function generateStaticParams() {
-  const supabase = createSimpleClient()
+  const supabase = createAdminClientStatic()
   const { data: products } = await supabase.from("products").select("slug")
   return (products || []).map((p: { slug: string }) => ({ slug: p.slug }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const supabase = createSimpleClient()
+  const supabase = createAdminClientStatic()
   const { data: product } = await supabase
     .from("products")
     .select("name, description")
@@ -31,18 +33,57 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const supabase = createSimpleClient()
+  const supabase = createAdminClientStatic()
 
   const { data: product } = await supabase
     .from("products")
-    .select(`
-      *,
-      product_variants (*)
-    `)
+    .select(`*, product_variants (*)`)
     .eq("slug", slug)
     .single()
 
   if (!product) notFound()
+
+  // Fetch all global settings to be as robust as possible
+  const { data: allSettings } = await supabase
+    .from("settings")
+    .select("*")
+  
+  // Use a scanner to find any subscription-related toggle in ANY row
+  let subscriptionEnabled = true
+  if (allSettings) {
+    for (const row of allSettings) {
+      const { key, value } = row
+      // Check if the key itself is one of the subscription toggles
+      if (key === 'is_subscription' || key === 'subscription_enabled' || key === 'isSubscription') {
+        if (value === false || value === "false") {
+          subscriptionEnabled = false
+          break
+        }
+      }
+      // Check if it's a JSON config and contains these fields
+      if (typeof value === 'object' && value !== null) {
+        const v = value as any
+        if (v.subscription_enabled === false || v.subscription_enabled === "false" ||
+            v.is_subscription === false || v.is_subscription === "false" ||
+            v.isSubscription === false || v.isSubscription === "false") {
+          subscriptionEnabled = false
+          break
+        }
+      }
+    }
+  }
+
+  // Fetch real review stats
+  const { data: reviewStats } = await supabase
+    .from("reviews")
+    .select("rating")
+    .eq("product_id", product.id)
+    .eq("is_approved", true)
+
+  const reviewCount = reviewStats?.length || 0
+  const avgRating = reviewCount > 0
+    ? (reviewStats!.reduce((s, r) => s + r.rating, 0) / reviewCount).toFixed(1)
+    : "4.8"
 
   const minPrice = Math.min(...(product.product_variants?.map((v: any) => v.price) || [0]))
   const maxPrice = Math.max(...(product.product_variants?.map((v: any) => v.price) || [0]))
@@ -65,11 +106,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       "offerCount": product.product_variants?.length || 1,
       "availability": "https://schema.org/InStock"
     },
-    "aggregateRating": {
+    "aggregateRating": reviewCount > 0 ? {
       "@type": "AggregateRating",
-      "ratingValue": "4.8",
-      "reviewCount": "124"
-    }
+      "ratingValue": avgRating,
+      "reviewCount": String(reviewCount)
+    } : undefined
   }
 
   const { data: related } = await supabase
@@ -105,8 +146,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <div className="container mx-auto px-4 max-w-7xl py-12 md:py-20">
         {/* Product detail */}
-        <div className="mb-32">
-          <ProductDetailClient product={product} />
+        <div className="mb-20">
+          <ProductDetailClient product={product} subscriptionEnabled={subscriptionEnabled} />
+        </div>
+
+        {/* Reviews */}
+        <div className="mb-20">
+          <ProductReviews productId={product.id} productName={product.name} />
         </div>
 
         {/* Related products */}

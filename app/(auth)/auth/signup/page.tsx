@@ -20,6 +20,7 @@ const schema = z.object({
   full_name: z.string().min(2, "Identifier must be at least 2 characters"),
   email: z.string().email("Please enter a valid alchemical identifier"),
   phone: z.string().optional(),
+  referral_code: z.string().optional(),
   password: z.string().min(8, "Security key must be at least 8 characters"),
   confirm_password: z.string(),
 }).refine((d) => d.password === d.confirm_password, {
@@ -49,7 +50,11 @@ export default function SignupPage() {
       email: data.email,
       password: data.password,
       options: {
-        data: { full_name: data.full_name, phone: data.phone },
+        data: { 
+          full_name: data.full_name, 
+          phone: data.phone,
+          referral_code: data.referral_code?.trim().toUpperCase() 
+        },
         emailRedirectTo: `${window.location.origin}/auth/login?confirmed=true`,
       },
     })
@@ -62,7 +67,12 @@ export default function SignupPage() {
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true)
-    await signIn("google", { callbackUrl: "/" })
+    try {
+      await signIn("google", { callbackUrl: "/" })
+    } catch (error) {
+      console.error("Google sign-in failed:", error)
+      setIsGoogleLoading(false)
+    }
   }
 
   if (success) {
@@ -167,6 +177,14 @@ export default function SignupPage() {
           <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
               <Input id="phone" type="tel" placeholder="+91 91665 9895" className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none" {...register("phone")} />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="referral_code" className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-4">Referral Protocol (Optional)</Label>
+          <div className="relative">
+              <UserPlus className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
+              <Input id="referral_code" placeholder="e.g. SHIGRU123" className="h-14 pl-12 rounded-2xl border-slate-50 bg-slate-50/50 focus:bg-white focus:ring-primary/20 transition-all font-medium ring-0 focus-visible:ring-0 shadow-none border-none uppercase" {...register("referral_code")} />
           </div>
         </div>
 

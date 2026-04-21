@@ -68,11 +68,20 @@ export default function ProfileSettingsPage() {
   }
 
   const onPasswordSubmit = async (data: PasswordData) => {
+    if (!session?.user?.id) {
+      toast.error("Please sign in again before changing your password.")
+      return
+    }
+
     setPwLoading(true)
     const supabase = createClient()
     const { error } = await supabase.auth.updateUser({ password: data.new_password })
     setPwLoading(false)
     if (error) {
+      if (error.message.toLowerCase().includes("invalid refresh token")) {
+        toast.error("Your session expired. Sign out and sign in again, then retry.")
+        return
+      }
       toast.error(error.message)
     } else {
       toast.success("Security logic refreshed")

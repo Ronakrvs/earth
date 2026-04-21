@@ -1,8 +1,8 @@
 import { MetadataRoute } from 'next'
-import { createAdminClient } from '@/lib/supabase/server'
+import { createAdminClientStatic } from '@/lib/supabase/server'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const supabase = await createAdminClient()
+  const supabase = createAdminClientStatic()
   const baseUrl = 'https://shigruvedas.com'
 
   // Fetch all blog posts

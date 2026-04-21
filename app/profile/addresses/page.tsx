@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { ChevronLeft, MapPin, Plus, Trash2, Pencil, CheckCircle2, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,8 +22,6 @@ type Address = {
   isDefault: boolean
 }
 
-const STORAGE_KEY = "shigru_addresses_v1"
-
 const emptyForm: Omit<Address, "id"> = {
   fullName: "",
   phone: "",
@@ -34,24 +34,46 @@ const emptyForm: Omit<Address, "id"> = {
 }
 
 export default function ProfileAddressesPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { data: session } = useSession()
+  const returnTo = searchParams.get("returnTo")
   const [addresses, setAddresses] = useState<Address[]>([])
   const [form, setForm] = useState<Omit<Address, "id">>(emptyForm)
   const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (!raw) return
-      const parsed = JSON.parse(raw) as Address[]
-      if (Array.isArray(parsed)) setAddresses(parsed)
-    } catch {
-      // ignore malformed storage
-    }
-  }, [])
+    let active = true
 
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(addresses))
-  }, [addresses])
+    async function loadAddresses() {
+      try {
+        const res = await fetch("/api/addresses")
+        const payload = await res.json()
+        if (!active || !res.ok) return
+        const parsed = Array.isArray(payload) ? payload : []
+        setAddresses(
+          parsed.map((a: any) => ({
+            id: a.id,
+            fullName: a.full_name,
+            phone: a.phone,
+            line1: a.address_line1,
+            line2: a.address_line2 || "",
+            city: a.city,
+            state: a.state,
+            pincode: a.pincode,
+            isDefault: Boolean(a.is_default),
+          }))
+        )
+      } catch {
+        // ignore load errors
+      }
+    }
+
+    loadAddresses()
+    return () => {
+      active = false
+    }
+  }, [session?.user?.email, session?.user?.id])
 
   const hasDefault = useMemo(() => addresses.some((a) => a.isDefault), [addresses])
 
@@ -66,30 +88,52 @@ export default function ProfileAddressesPage() {
   const onSubmit = () => {
     if (!validate()) return
 
-    if (editingId) {
-      setAddresses((prev) =>
-        prev.map((a) => {
-          if (a.id !== editingId) {
-            return form.isDefault ? { ...a, isDefault: false } : a
-          }
-          return { ...a, ...form }
-        })
-      )
-      setEditingId(null)
-    } else {
-      const next: Address = {
-        id: crypto.randomUUID(),
-        ...form,
-        isDefault: !hasDefault || form.isDefault,
+    const save = async () => {
+      const payload = {
+        id: editingId,
+        full_name: form.fullName,
+        phone: form.phone,
+        address_line1: form.line1,
+        address_line2: form.line2 || "",
+        city: form.city,
+        state: form.state,
+        pincode: form.pincode,
+        is_default: !hasDefault || form.isDefault,
+      }
+
+      const res = await fetch("/api/addresses", {
+        method: editingId ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      })
+      const saved = await res.json()
+      if (!res.ok) throw new Error(saved?.error || "Failed to save address")
+
+      const mapped: Address = {
+        id: saved.id,
+        fullName: saved.full_name,
+        phone: saved.phone,
+        line1: saved.address_line1,
+        line2: saved.address_line2 || "",
+        city: saved.city,
+        state: saved.state,
+        pincode: saved.pincode,
+        isDefault: Boolean(saved.is_default),
       }
 
       setAddresses((prev) => {
-        if (!next.isDefault) return [...prev, next]
-        return [...prev.map((a) => ({ ...a, isDefault: false })), next]
+        const filtered = prev.filter((a) => a.id !== mapped.id)
+        if (mapped.isDefault) {
+          return [...filtered.map((a) => ({ ...a, isDefault: false })), mapped]
+        }
+        return [...filtered, mapped]
       })
+      setEditingId(null)
+      setForm(emptyForm)
+      if (returnTo) router.push(returnTo)
     }
 
-    setForm(emptyForm)
+    void save()
   }
 
   const onEdit = (address: Address) => {
@@ -99,11 +143,19 @@ export default function ProfileAddressesPage() {
   }
 
   const onDelete = (id: string) => {
-    setAddresses((prev) => {
-      const filtered = prev.filter((a) => a.id !== id)
-      if (!filtered.some((a) => a.isDefault) && filtered[0]) filtered[0].isDefault = true
-      return [...filtered]
-    })
+    void (async () => {
+      const res = await fetch("/api/addresses", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) return
+      setAddresses((prev) => {
+        const filtered = prev.filter((a) => a.id !== id)
+        if (!filtered.some((a) => a.isDefault) && filtered[0]) filtered[0].isDefault = true
+        return [...filtered]
+      })
+    })()
 
     if (editingId === id) {
       setEditingId(null)
@@ -112,7 +164,27 @@ export default function ProfileAddressesPage() {
   }
 
   const setDefault = (id: string) => {
-    setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })))
+    void (async () => {
+      const current = addresses.find((a) => a.id === id)
+      if (!current) return
+      const res = await fetch("/api/addresses", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          full_name: current.fullName,
+          phone: current.phone,
+          address_line1: current.line1,
+          address_line2: current.line2 || "",
+          city: current.city,
+          state: current.state,
+          pincode: current.pincode,
+          is_default: true,
+        }),
+      })
+      if (!res.ok) return
+      setAddresses((prev) => prev.map((a) => ({ ...a, isDefault: a.id === id })))
+    })()
   }
 
   return (
@@ -192,6 +264,16 @@ export default function ProfileAddressesPage() {
                     Cancel
                   </Button>
                 )}
+                {returnTo && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push(returnTo)}
+                    className="border-border"
+                  >
+                    Back to Order
+                  </Button>
+                )}
               </div>
             </div>
           </MoringaCard>
@@ -227,11 +309,18 @@ export default function ProfileAddressesPage() {
                         </button>
                       </div>
                     </div>
-                    {!a.isDefault && (
-                      <Button variant="outline" onClick={() => setDefault(a.id)} className="mt-3 border-border text-foreground hover:bg-muted">
-                        Set as Default
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {a.isDefault ? (
+                        <span className="text-xs px-3 py-1 rounded-full bg-primary/10 text-primary font-bold">Default address in use</span>
+                      ) : (
+                        <Button variant="outline" onClick={() => setDefault(a.id)} className="border-border text-foreground hover:bg-muted">
+                          Set as Default
+                        </Button>
+                      )}
+                      <Button variant="outline" onClick={() => onEdit(a)} className="border-border text-foreground hover:bg-muted">
+                        Change
                       </Button>
-                    )}
+                    </div>
                   </div>
                 ))}
               </div>

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { createAdminClient } from "@/lib/supabase/server"
+import { isAdminSession } from "@/lib/admin-auth"
 
 export async function PATCH(
   req: Request,
@@ -20,21 +21,34 @@ export async function PATCH(
       .eq('id', session.user.id)
       .single()
 
-    if (profile?.role !== "admin") {
+    if (!isAdminSession(session, profile?.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await req.json()
-    const { status } = body
+    const updatePayload: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    }
 
-    const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
-    if (!status || !validStatuses.includes(status)) {
-      return NextResponse.json({ error: "Invalid status" }, { status: 400 })
+    if (typeof body?.status === "string") {
+      const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+      if (!validStatuses.includes(body.status)) {
+        return NextResponse.json({ error: "Invalid status" }, { status: 400 })
+      }
+      updatePayload.status = body.status
+    }
+
+    if (typeof body?.tracking_number === "string") {
+      updatePayload.tracking_number = body.tracking_number.trim() || null
+    }
+
+    if (!updatePayload.status && !("tracking_number" in updatePayload)) {
+      return NextResponse.json({ error: "No changes provided" }, { status: 400 })
     }
 
     const { error } = await supabase
       .from("orders")
-      .update({ status, updated_at: new Date().toISOString() })
+      .update(updatePayload)
       .eq("id", id)
 
     if (error) throw error

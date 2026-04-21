@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { useCart } from "@/lib/store/cart"
@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { Loader2, MapPin, ShoppingBag, CreditCard, Lock, CheckCircle2 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import DiscountSection from "@/components/checkout/DiscountSection"
 
 const addressSchema = z.object({
   full_name: z.string().min(2, "Name is required"),
@@ -28,6 +29,7 @@ const addressSchema = z.object({
 type AddressData = z.infer<typeof addressSchema>
 
 type SavedAddress = {
+  id?: string
   fullName: string
   phone: string
   line1: string
@@ -45,7 +47,6 @@ declare global {
 }
 
 const STEPS = ["Cart Review", "Shipping Address", "Payment"]
-
 export default function CheckoutPage() {
   const router = useRouter()
   const { data: session } = useSession()
@@ -54,8 +55,31 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [savedAddress, setSavedAddress] = useState<AddressData | null>(null)
 
-  const shipping = totalPrice() >= 499 ? 0 : 49
-  const grandTotal = totalPrice() + shipping
+  // Discount states
+  const [pointsUsed, setPointsUsed] = useState(0)
+  const [pointsValue, setPointsValue] = useState(0)
+  const [selectedCoupon, setSelectedCoupon] = useState<any | null>(null)
+  const [shippingQuote, setShippingQuote] = useState<number | null>(null)
+  const [shippingQuoteLoading, setShippingQuoteLoading] = useState(false)
+  const [savedAddresses, setSavedAddresses] = useState<SavedAddress[]>([])
+  const paymentLockRef = useRef(false)
+  const checkoutSessionIdRef = useRef(crypto.randomUUID())
+
+  const subtotal = totalPrice()
+  const defaultShipping = subtotal >= 1000 ? 0 : 70
+  const shipping = shippingQuote ?? defaultShipping
+  
+  // Calculate coupon discount
+  let couponDiscount = 0
+  if (selectedCoupon) {
+    if (selectedCoupon.type === 'percent') {
+      couponDiscount = Math.round((subtotal * selectedCoupon.value) / 100)
+    } else {
+      couponDiscount = selectedCoupon.value
+    }
+  }
+
+  const grandTotal = Math.max(0, subtotal + shipping - pointsValue - couponDiscount)
 
   const {
     register,
@@ -69,42 +93,113 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (session?.user?.name) setValue("full_name", session.user.name)
+  }, [session?.user?.name, setValue])
 
-    try {
-      const raw = localStorage.getItem("shigru_addresses_v1")
-      if (!raw) return
-      const parsed = JSON.parse(raw) as SavedAddress[]
-      if (!Array.isArray(parsed) || parsed.length === 0) return
+  useEffect(() => {
+    let active = true
 
-      const chosen = parsed.find((a) => a.isDefault) || parsed[0]
-      if (!chosen) return
+    async function loadAddresses() {
+      try {
+        const res = await fetch("/api/addresses")
+        const payload = await res.json()
+        if (!active || !res.ok) return
+        const addresses = Array.isArray(payload) ? payload : []
+        setSavedAddresses(addresses)
 
-      const mapped: AddressData = {
-        full_name: chosen.fullName || session?.user?.name || "",
-        phone: chosen.phone || "",
-        address_line1: chosen.line1 || "",
-        address_line2: chosen.line2 || "",
-        city: chosen.city || "",
-        state: chosen.state || "",
-        pincode: chosen.pincode || "",
+        const chosen = addresses.find((a) => a.is_default || a.isDefault) || addresses[0]
+        if (!chosen) return
+
+        const mapped: AddressData = {
+          full_name: chosen.full_name || chosen.fullName || session?.user?.name || "",
+          phone: chosen.phone || "",
+          address_line1: chosen.address_line1 || chosen.line1 || "",
+          address_line2: chosen.address_line2 || chosen.line2 || "",
+          city: chosen.city || "",
+          state: chosen.state || "",
+          pincode: chosen.pincode || "",
+        }
+
+        setValue("full_name", mapped.full_name)
+        setValue("phone", mapped.phone)
+        setValue("address_line1", mapped.address_line1)
+        setValue("address_line2", mapped.address_line2 || "")
+        setValue("city", mapped.city)
+        setValue("state", mapped.state)
+        setValue("pincode", mapped.pincode)
+        setSavedAddress(mapped)
+      } catch {
+        // ignore load errors
       }
+    }
 
-      setValue("full_name", mapped.full_name)
-      setValue("phone", mapped.phone)
-      setValue("address_line1", mapped.address_line1)
-      setValue("address_line2", mapped.address_line2 || "")
-      setValue("city", mapped.city)
-      setValue("state", mapped.state)
-      setValue("pincode", mapped.pincode)
-      setSavedAddress(mapped)
-    } catch {
-      // ignore malformed storage
+    loadAddresses()
+    return () => {
+      active = false
     }
   }, [session?.user?.name, setValue])
 
-  const onAddressSubmit = (data: AddressData) => {
-    setSavedAddress(data)
-    setStep(2)
+  const onAddressSubmit = async (data: AddressData) => {
+    try {
+      const existing = savedAddresses
+      const existingDefault = existing.find((a) => a.is_default || a.isDefault)
+      const payload = {
+        full_name: data.full_name,
+        phone: data.phone,
+        address_line1: data.address_line1,
+        address_line2: data.address_line2 || "",
+        city: data.city,
+        state: data.state,
+        pincode: data.pincode,
+        is_default: true,
+      }
+
+      let saved: any
+      if (existingDefault?.id) {
+        const res = await fetch("/api/addresses", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: existingDefault.id, ...payload }),
+        })
+        saved = await res.json()
+      } else {
+        const res = await fetch("/api/addresses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        })
+        saved = await res.json()
+      }
+
+      if (!saved?.id) throw new Error(saved?.error || "Failed to save address")
+      setSavedAddresses((prev) => [saved, ...prev.filter((a) => a.id !== saved.id)])
+      setSavedAddress(data)
+      setStep(2)
+    } catch (error: any) {
+      toast.error(error?.message || "Could not save address")
+    }
+  }
+
+  const fetchShippingQuote = async (pincode: string) => {
+    if (!pincode || pincode.length !== 6) {
+      setShippingQuote(null)
+      return
+    }
+
+    setShippingQuoteLoading(true)
+    try {
+      const res = await fetch(`/api/shipping/quote?pincode=${encodeURIComponent(pincode)}&subtotal=${subtotal}`)
+      const payload = await res.json()
+
+      if (res.ok && typeof payload.shippingAmount === "number") {
+        setShippingQuote(payload.shippingAmount)
+      } else {
+        setShippingQuote(null)
+      }
+    } catch {
+      setShippingQuote(null)
+    } finally {
+      setShippingQuoteLoading(false)
+    }
   }
 
   const loadRazorpay = () =>
@@ -121,13 +216,15 @@ export default function CheckoutPage() {
     })
 
   const handlePayment = async () => {
-    if (!savedAddress) return
+    if (!savedAddress || paymentLockRef.current) return
+    paymentLockRef.current = true
     setIsProcessing(true)
 
     const loaded = await loadRazorpay()
     if (!loaded) {
       toast.error("Failed to load payment gateway. Please try again.")
       setIsProcessing(false)
+      paymentLockRef.current = false
       return
     }
 
@@ -145,16 +242,30 @@ export default function CheckoutPage() {
             quantity: i.quantity,
           })),
           shipping: savedAddress,
-          subtotal: totalPrice(),
+          subtotal,
           shippingAmount: shipping,
+          discountAmount: pointsValue + couponDiscount,
           total: grandTotal,
+          pointsUsed,
+          couponId: selectedCoupon?.id || null,
+          checkoutSessionId: checkoutSessionIdRef.current,
         }),
       })
-      const { razorpayOrderId, dbOrderId } = await res.json()
+      const payload = await res.json()
+
+      if (!res.ok) {
+        toast.error(payload?.error || "Could not create order. Please try again.")
+        setIsProcessing(false)
+        paymentLockRef.current = false
+        return
+      }
+
+      const { razorpayOrderId, dbOrderId } = payload
 
       if (!razorpayOrderId) {
         toast.error("Could not create order. Please try again.")
         setIsProcessing(false)
+        paymentLockRef.current = false
         return
       }
 
@@ -183,6 +294,7 @@ export default function CheckoutPage() {
           } else {
             toast.error("Payment verification failed. Contact support.")
           }
+          paymentLockRef.current = false
         },
         prefill: {
           name: savedAddress.full_name,
@@ -191,7 +303,10 @@ export default function CheckoutPage() {
         },
         theme: { color: "#16a34a" },
         modal: {
-          ondismiss: () => setIsProcessing(false),
+          ondismiss: () => {
+            setIsProcessing(false)
+            paymentLockRef.current = false
+          },
         },
       }
 
@@ -200,6 +315,7 @@ export default function CheckoutPage() {
     } catch {
       toast.error("Something went wrong. Please try again.")
       setIsProcessing(false)
+      paymentLockRef.current = false
     }
   }
 
@@ -280,7 +396,7 @@ export default function CheckoutPage() {
                   <h2 className="font-bold text-lg text-foreground flex items-center gap-2">
                     <MapPin className="h-5 w-5 text-primary" /> Shipping Address
                   </h2>
-                  <Link href="/profile/addresses" className="text-xs font-semibold text-primary hover:underline">
+                  <Link href="/profile/addresses?returnTo=/checkout" className="text-xs font-semibold text-primary hover:underline">
                     Manage Saved Addresses
                   </Link>
                 </div>
@@ -319,8 +435,22 @@ export default function CheckoutPage() {
                     </div>
                     <div>
                       <Label>Pincode</Label>
-                      <Input className="mt-1" placeholder="313002" {...register("pincode")} />
+                      <Input
+                        className="mt-1"
+                        placeholder="313002"
+                        {...register("pincode", {
+                          onBlur: (e) => fetchShippingQuote(e.target.value.trim()),
+                        })}
+                      />
                       {errors.pincode && <p className="text-destructive text-xs mt-1">{errors.pincode.message}</p>}
+                      {shippingQuoteLoading && (
+                        <p className="text-[10px] text-muted-foreground mt-1">Checking shipping for your location...</p>
+                      )}
+                      {!shippingQuoteLoading && shippingQuote !== null && (
+                        <p className="text-[10px] text-emerald-600 mt-1">
+                          Location-based shipping applied: ₹{shippingQuote}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-3 pt-2">
@@ -328,7 +458,7 @@ export default function CheckoutPage() {
                       Back
                     </Button>
                     <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                      Continue to Payment
+                      {savedAddress ? "Save & Continue to Payment" : "Save & Continue to Payment"}
                     </Button>
                   </div>
                 </form>
@@ -342,9 +472,14 @@ export default function CheckoutPage() {
                     <h3 className="font-semibold text-sm text-foreground flex items-center gap-1.5">
                       <MapPin className="h-4 w-4 text-primary" /> Delivering to
                     </h3>
-                    <button onClick={() => setStep(1)} className="text-xs text-primary hover:underline">
-                      Change
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setStep(1)}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Change
+                      </button>
+                    </div>
                   </div>
                   <p className="text-sm text-foreground font-medium">{savedAddress.full_name}</p>
                   <p className="text-xs text-muted-foreground">{savedAddress.phone}</p>
@@ -352,11 +487,49 @@ export default function CheckoutPage() {
                     {savedAddress.address_line1}
                     {savedAddress.address_line2 ? `, ${savedAddress.address_line2}` : ""}, {savedAddress.city}, {savedAddress.state} - {savedAddress.pincode}
                   </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => router.push("/profile/addresses?returnTo=/checkout")}
+                      className="h-9 rounded-xl border-border text-xs font-semibold"
+                    >
+                      Change Address
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setValue("full_name", savedAddress.full_name)
+                        setValue("phone", savedAddress.phone)
+                        setValue("address_line1", savedAddress.address_line1)
+                        setValue("address_line2", savedAddress.address_line2 || "")
+                        setValue("city", savedAddress.city)
+                        setValue("state", savedAddress.state)
+                        setValue("pincode", savedAddress.pincode)
+                        setStep(1)
+                      }}
+                      className="h-9 rounded-xl border-border text-xs font-semibold"
+                    >
+                      Edit Current Address
+                    </Button>
+                  </div>
                 </div>
+
+                  <div className="mt-8 mb-8 border-t border-border pt-8">
+                     <DiscountSection 
+                        subtotal={subtotal} 
+                        onDiscountChange={(d) => {
+                           setPointsUsed(d.pointsUsed)
+                           setPointsValue(d.pointsValue)
+                           setSelectedCoupon(d.coupon)
+                        }} 
+                     />
+                  </div>
 
                 <div className="bg-card rounded-2xl border border-border shadow-sm p-6">
                   <h2 className="font-bold text-lg text-foreground mb-4 flex items-center gap-2">
-                    <CreditCard className="h-5 w-5 text-primary" /> Payment
+                    <CreditCard className="h-5 w-5 text-primary" /> Payment Selection
                   </h2>
                   <div className="bg-muted border border-primary/30 rounded-xl p-4 mb-6">
                     <p className="text-sm text-foreground font-medium mb-1">🔒 Secure Payment via Razorpay</p>
@@ -401,9 +574,25 @@ export default function CheckoutPage() {
                   <span>Shipping</span>
                   <span className={shipping === 0 ? "text-primary font-medium" : ""}>{shipping === 0 ? "FREE" : `₹${shipping}`}</span>
                 </div>
+                {(pointsValue > 0 || couponDiscount > 0) && (
+                   <div className="space-y-2 pt-1">
+                      {pointsValue > 0 && (
+                         <div className="flex justify-between text-emerald-600 font-medium">
+                            <span>Points Redemption</span>
+                            <span className="italic">-₹{pointsValue}</span>
+                         </div>
+                      )}
+                      {couponDiscount > 0 && (
+                         <div className="flex justify-between text-emerald-600 font-medium">
+                            <span className="flex items-center gap-1">Coupon ({selectedCoupon.code})</span>
+                            <span className="italic">-₹{couponDiscount}</span>
+                         </div>
+                      )}
+                   </div>
+                )}
                 <Separator />
-                <div className="flex justify-between font-bold text-base">
-                  <span>Total</span>
+                <div className="flex justify-between font-bold text-base text-primary">
+                  <span>Total Due</span>
                   <span>₹{grandTotal.toFixed(0)}</span>
                 </div>
               </div>

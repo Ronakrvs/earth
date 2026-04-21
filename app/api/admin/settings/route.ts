@@ -1,29 +1,26 @@
 import { auth } from "@/lib/auth"
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClientStatic } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
 export async function GET() {
   const session = await auth()
-  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 })
-
-  const supabase = await createAdminClient()
   
-  // Check admin role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session.user.id)
-    .single()
+  // Efficient and consistent authorization check
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 })
+  if (session.user.role !== "admin") return new NextResponse("Forbidden", { status: 403 })
 
-  if (profile?.role !== "admin") return new NextResponse("Forbidden", { status: 403 })
-
+  // Use the static client to bypass RLS for administrative GET
+  const supabase = createAdminClientStatic()
+  
   const { data: settings, error } = await supabase
     .from('settings')
     .select('*')
 
-  if (error) return new NextResponse(error.message, { status: 500 })
+  if (error) {
+    console.error("Admin Settings GET error:", error.message)
+    return NextResponse.json({})
+  }
 
-  // Transform into a key-value object
   const settingsMap = settings.reduce((acc, curr) => {
     acc[curr.key] = curr.value
     return acc
@@ -34,19 +31,13 @@ export async function GET() {
 
 export async function POST(req: Request) {
   const session = await auth()
-  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 })
-
-  const supabase = await createAdminClient()
   
-  // Check admin role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', session.user.id)
-    .single()
+  if (!session?.user?.id) return new NextResponse("Unauthorized", { status: 401 })
+  if (session.user.role !== "admin") return new NextResponse("Forbidden", { status: 403 })
 
-  if (profile?.role !== "admin") return new NextResponse("Forbidden", { status: 403 })
-
+  // Use the static client to bypass RLS for administrative UPSERT
+  const supabase = createAdminClientStatic()
+  
   const { key, value } = await req.json()
 
   if (!key) return new NextResponse("Key is required", { status: 400 })

@@ -4,7 +4,12 @@ import { NextResponse } from "next/server"
 export default auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
-  const isAdmin = req.auth?.user?.role === "admin"
+  const adminEmails =
+    process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) || []
+  const email = req.auth?.user?.email?.toLowerCase()
+  const isAdmin =
+    req.auth?.user?.role === "admin" ||
+    (email ? adminEmails.includes(email) : false)
   const path = nextUrl.pathname
 
   // Protected user routes

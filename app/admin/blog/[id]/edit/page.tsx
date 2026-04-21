@@ -18,7 +18,7 @@ export default async function EditBlogPostPage({
     .eq('id', session?.user?.id || '')
     .single()
 
-  if (profile?.role !== "admin") redirect("/")
+  if (session?.user?.role !== "admin" && profile?.role !== "admin") redirect("/")
 
   const { data: post } = await supabase
     .from("blog_posts")

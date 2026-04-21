@@ -16,13 +16,14 @@ export default async function AdminOrdersPage() {
     .eq('id', session?.user?.id || '')
     .single()
 
-  if (profile?.role !== "admin") redirect("/")
+  if (session?.user?.role !== "admin" && profile?.role !== "admin") redirect("/")
 
   const { data: orders } = await supabase
     .from("orders")
     .select(`
       *,
       profiles:user_id (full_name, email),
+      user_email,
       order_items (*)
     `)
     .order("created_at", { ascending: false })

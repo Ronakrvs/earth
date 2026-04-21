@@ -3,8 +3,10 @@ import Google from "next-auth/providers/google"
 import Credentials from "next-auth/providers/credentials"
 import { createClient } from "@supabase/supabase-js"
 
+// Helper to check if a string is a valid UUID
 export const { handlers, auth, signIn, signOut } = NextAuth({
   secret: process.env.AUTH_SECRET,
+  trustHost: true,
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID!,
@@ -18,9 +20,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
 
-        // Use a no-op storage adapter so Supabase doesn't try to
-        // save/read cookies in the server-side RSC context.
-        // NextAuth manages the session via JWT — Supabase session not needed here.
         const supabase = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -48,7 +47,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        // Fetch profile for role info
         const { data: profile } = await supabase
           .from("profiles")
           .select("full_name, avatar_url, role")
@@ -67,91 +65,104 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
+      // On first sign-in, populate token from user object
       if (user) {
-        token.id = user.id
+        token.id = user.id ?? token.sub
         token.email = user.email
-        
-        // Initial role check
-        const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
+        token.role = (user as any).role || "customer"
+
+        // Override with admin email list
+        const adminEmails =
+          process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) || []
         if (user.email && adminEmails.includes(user.email.toLowerCase())) {
           token.role = "admin"
-          console.log(`[auth/jwt] Admin role assigned by email: ${user.email}`)
-        } else {
-          token.role = (user as any).role || "customer"
         }
       }
-      
+
+      // Allow manual session role updates
       if (trigger === "update" && session?.user?.role) {
         token.role = session.user.role
       }
+
       return token
     },
+
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        
-        // Fetch latest role directly from Supabase to ensure real-time updates
-        // even if the JWT itself is stale.
-        try {
-          const { createClient: createSimpleSupabase } = await import("@supabase/supabase-js")
-          
-          // Use service role key to bypass RLS in server-side session callback
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-          
-          if (supabaseUrl && serviceKey) {
-            const supabase = createSimpleSupabase(supabaseUrl, serviceKey)
-            const { data: profile, error } = await supabase
-              .from("profiles")
-              .select("role")
-              .eq("id", token.id)
-              .maybeSingle()
-            
-            if (error) {
-              console.error("[auth] dynamic role fetch error:", error.message)
-            }
-            
-            if (profile?.role) {
-              session.user.role = profile.role
-              console.log(`[auth/session] Role from profile: ${profile.role}`)
-            } else {
-              // Fallback: Check by email if ID lookup fails or returns no role
-              // Useful for OAuth users who might not have a profile record yet
-              const { data: emailProfile } = await supabase
-                .from("profiles")
-                .select("role")
-                .eq("email", token.email)
-                .maybeSingle()
-              
-              if (emailProfile?.role) {
-                session.user.role = emailProfile.role
-                console.log(`[auth/session] Role from email profile: ${emailProfile.role}`)
-              } else {
-                // Secondary fallback: Admin emails env var
-                const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
-                if (token.email && adminEmails.includes((token.email as string).toLowerCase())) {
-                   session.user.role = "admin"
-                   console.log(`[auth/session] Role assigned by ADMIN_EMAILS: admin`)
-                } else {
-                   session.user.role = (token.role as string) || "customer"
-                   console.log(`[auth/session] Falling back to token role: ${session.user.role}`)
-                }
-              }
-            }
-          } else {
-            // Fallback: Admin emails env var if Supabase client cannot be created
-            const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || []
-            if (token.email && adminEmails.includes((token.email as string).toLowerCase())) {
-              session.user.role = "admin"
-            } else {
-              session.user.role = (token.role as string) || "customer"
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching role for session:", error)
-          session.user.role = (token.role as string) || "customer"
+      try {
+        // Set basic fields from token (always safe)
+        session.user.id = (token.id ?? token.sub ?? "") as string
+        session.user.role = (token.role as string) || "customer"
+
+        // Try to fetch the latest role from Supabase
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+        if (!supabaseUrl || !serviceKey) {
+          console.warn("[auth/session] Missing Supabase env vars — using token role")
+          return session
         }
+
+        const supabase = createClient(supabaseUrl, serviceKey, {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+          },
+        })
+
+        const adminEmails =
+          process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim().toLowerCase()) || []
+
+        let profileRole: string | null = null
+
+        const id = (token.id ?? token.sub) as string | undefined
+        if (id) {
+          session.user.id = id
+        }
+
+        // Credentials users may have a UUID profile; Google OAuth users often do not.
+        if (id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", id)
+            .maybeSingle()
+
+          if (error) {
+            console.error("[auth/session] UUID lookup error:", error.message)
+          } else {
+            profileRole = data?.role ?? null
+          }
+        }
+
+        // Google OAuth users can still inherit admin/customer role from the profile row matched by email.
+        if (!profileRole && token.email) {
+          const { data, error } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("email", token.email as string)
+            .maybeSingle()
+
+          if (error) {
+            console.error("[auth/session] Email lookup error:", error.message)
+          } else {
+            profileRole = data?.role ?? null
+          }
+        }
+
+        // Admin email list always wins
+        const email = token.email as string | undefined
+        if (email && adminEmails.includes(email.toLowerCase())) {
+          session.user.role = "admin"
+        } else {
+          session.user.role = profileRole || (token.role as string) || "customer"
+        }
+      } catch (err) {
+        // Never crash — return session with fallback role
+        console.error("[auth/session] Unexpected error:", err)
+        session.user.role = (token.role as string) || "customer"
       }
+
       return session
     },
   },
@@ -161,5 +172,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 })

@@ -16,7 +16,7 @@ export default async function AdminB2BPage() {
     .eq('id', session?.user?.id || '')
     .single()
 
-  if (profile?.role !== "admin") redirect("/")
+  if (session?.user?.role !== "admin" && profile?.role !== "admin") redirect("/")
 
   const { data: inquiries } = await supabase
     .from("b2b_inquiries")

@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { ShoppingCart, Minus, Plus, Star, Shield, Truck, Leaf, RotateCcw, CheckCircle2 } from "lucide-react"
+import { ShoppingCart, Minus, Plus, Star, Shield, Truck, Leaf, RotateCcw, CheckCircle2, RefreshCw, ChevronDown } from "lucide-react"
 import { useCart } from "@/lib/store/cart"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
@@ -32,14 +32,16 @@ interface ProductDetailClientProps {
     avg_rating?: number
     review_count?: number
   }
+  subscriptionEnabled?: boolean
 }
 
-export default function ProductDetailClient({ product }: ProductDetailClientProps) {
+export default function ProductDetailClient({ product, subscriptionEnabled = true }: ProductDetailClientProps) {
   const [selectedVariant, setSelectedVariant] = useState<Variant>(
     product.product_variants.find((v) => v.stock > 0) || product.product_variants[0]
   )
   const [quantity, setQuantity] = useState(1)
   const [activeImage, setActiveImage] = useState(product.thumbnail)
+  const [subscribeMode, setSubscribeMode] = useState(false)
   const addItem = useCart((s) => s.addItem)
   const openCart = useCart((s) => s.openCart)
 
@@ -172,9 +174,51 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     )}
                 </div>
 
+                {/* Subscribe / One-time toggle */}
+                {subscriptionEnabled && (
+                    <div className="mb-8">
+                        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Purchase Option</p>
+                        <div className="grid grid-cols-2 gap-3">
+                            <button
+                                onClick={() => setSubscribeMode(false)}
+                                className={cn(
+                                    "rounded-2xl border-2 p-4 text-left transition-all duration-200",
+                                    !subscribeMode
+                                        ? "border-primary bg-primary/5"
+                                        : "border-slate-100 bg-white hover:border-primary/30"
+                                )}
+                            >
+                                <p className={`text-sm font-black ${!subscribeMode ? "text-primary" : "text-slate-700"}`}>One-time</p>
+                                <p className="text-xl font-black text-slate-900 mt-1">₹{selectedVariant.price}</p>
+                            </button>
+                            <button
+                                onClick={() => setSubscribeMode(true)}
+                                className={cn(
+                                    "rounded-2xl border-2 p-4 text-left transition-all duration-200 relative overflow-hidden",
+                                    subscribeMode
+                                        ? "border-primary bg-primary/5"
+                                        : "border-slate-100 bg-white hover:border-primary/30"
+                                )}
+                            >
+                                <span className="absolute top-2 right-2 bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-lg">SAVE 15%</span>
+                                <p className={`text-sm font-black ${subscribeMode ? "text-primary" : "text-slate-700"}`}>
+                                    <RefreshCw className="h-3 w-3 inline mr-1" />Subscribe
+                                </p>
+                                <p className="text-xl font-black text-slate-900 mt-1">
+                                    ₹{Math.round(selectedVariant.price * 0.85)}
+                                    <span className="text-sm font-medium text-slate-400">/mo</span>
+                                </p>
+                            </button>
+                        </div>
+                        {subscribeMode && (
+                            <p className="text-xs text-slate-500 font-medium mt-2 px-1">📦 Delivered every 30 days · Cancel or pause any time</p>
+                        )}
+                    </div>
+                )}
+
                 {/* Variant Selector */}
                 <div className="mb-10">
-                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Select Essence</p>
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-4">Select Pack Size</p>
                     <div className="flex flex-wrap gap-3">
                         {product.product_variants.map((variant) => (
                             <button
@@ -269,6 +313,34 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                             </div>
                         ))}
                     </div>
+                </div>
+            </div>
+
+            {/* FAQ Accordion */}
+            <div className="mt-10">
+                <div className="flex items-center gap-4 mb-6">
+                    <Separator className="flex-1 bg-slate-100" />
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">FAQs</span>
+                    <Separator className="flex-1 bg-slate-100" />
+                </div>
+                <div className="space-y-3">
+                    {[
+                        { q: "How do I use this product daily?", a: "Take 1 teaspoon (4–5g) daily. Mix into warm water, smoothies, dal, or any recipe. Start with ½ tsp for the first week." },
+                        { q: "Is it safe during pregnancy?", a: "Moringa leaves and powder are generally considered safe. However, please consult your doctor before use during pregnancy or while breastfeeding." },
+                        { q: "What is the shelf life?", a: "18 months sealed. Once opened, store in a cool dry place and use within 6 months for best results. Do not refrigerate." },
+                        { q: "Do you have lab test reports?", a: "Yes. Every batch is third-party lab tested. Request the current batch COA via WhatsApp (+91 91665 99895) or email." },
+                        { q: "What if I'm not satisfied?", a: "We offer hassle-free returns within 7 days for unopened products. For quality issues, we replace immediately — no questions asked." },
+                    ].map((faq, i) => (
+                        <details key={i} className="group rounded-2xl border border-slate-100 bg-slate-50/50 overflow-hidden">
+                            <summary className="flex items-center justify-between p-5 cursor-pointer list-none font-bold text-slate-900 hover:text-primary transition-colors gap-4">
+                                <span className="text-sm">{faq.q}</span>
+                                <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 group-open:rotate-180 transition-transform duration-300" />
+                            </summary>
+                            <div className="px-5 pb-5 text-slate-500 text-sm leading-relaxed font-medium border-t border-slate-100 pt-3">
+                                {faq.a}
+                            </div>
+                        </details>
+                    ))}
                 </div>
             </div>
         </motion.div>

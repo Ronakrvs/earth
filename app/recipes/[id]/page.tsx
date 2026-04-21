@@ -8,7 +8,7 @@ import {
     Clock, Users, Flame, Star, ChefHat, Target,
     ArrowLeft, CheckCircle2, ListChecks, HeartPulse, Leaf, ArrowRight
 } from "lucide-react"
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClientStatic } from "@/lib/supabase/server"
 import * as motion from "framer-motion/client"
 import { MoringaCard } from "@/components/ui/moringa-card"
 import { cn } from "@/lib/utils"
@@ -20,7 +20,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const resolvedParams = await params;
-  const supabase = await createAdminClient()
+  const supabase = createAdminClientStatic()
   const { data: recipe } = await supabase
     .from('recipes')
     .select('name, description, image_url, tags')
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function RecipeDetailPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const supabase = await createAdminClient()
+  const supabase = createAdminClientStatic()
   const { data: recipe } = await supabase
     .from('recipes')
     .select('*')

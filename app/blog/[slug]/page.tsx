@@ -22,7 +22,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
-  const supabase = await createAdminClient()
+  const supabase = createAdminClientStatic()
   const { data: post } = await supabase
     .from('blog_posts')
     .select('title, excerpt, cover_image')
@@ -44,7 +44,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const supabase = await createAdminClient()
+  const supabase = createAdminClientStatic()
   
   const { data: post } = await supabase
     .from('blog_posts')

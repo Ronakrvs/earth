@@ -2,7 +2,6 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { createAdminClient } from "@/lib/supabase/server"
 import { Sidebar } from "@/components/admin/Sidebar"
-import { Toaster } from "sonner"
 
 export default async function AdminLayout({
   children,
@@ -24,7 +23,7 @@ export default async function AdminLayout({
     .eq('id', session.user.id)
     .single()
 
-  const userRole = profile?.role || session.user.role
+  const userRole = session.user.role || profile?.role
   if (userRole !== "admin") {
     redirect("/")
   }
@@ -37,7 +36,6 @@ export default async function AdminLayout({
           {children}
         </div>
       </main>
-      <Toaster position="top-right" richColors />
     </div>
   )
 }

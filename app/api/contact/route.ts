@@ -5,16 +5,28 @@ export async function POST(req: Request) {
   try {
     const body = await req.json()
     const { 
+      name,
       firstName, 
       lastName, 
       email, 
       phone, 
       address, 
       message, 
+      subject,
       orderType,
       freshLeavesQty,
       powderQty 
     } = body
+
+    // Support both single "name" and split first/last names
+    let finalFirstName = firstName || ""
+    let finalLastName = lastName || ""
+
+    if (name && !finalFirstName) {
+      const parts = name.trim().split(/\s+/)
+      finalFirstName = parts[0]
+      finalLastName = parts.slice(1).join(" ") || "Botanist" // Default last name if only one name provided
+    }
 
     const productsInterested = []
     if (freshLeavesQty) productsInterested.push({ name: "Fresh Moringa Leaves", qty: freshLeavesQty })
@@ -22,13 +34,13 @@ export async function POST(req: Request) {
 
     const supabase = await createAdminClient()
     const { error } = await supabase.from("contact_messages").insert([{
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone,
-      address,
-      message,
-      order_type: orderType,
+      first_name: finalFirstName || "Visitor",
+      last_name: finalLastName || "Botanist",
+      email: email,
+      phone: phone,
+      address: address,
+      message: message,
+      order_type: subject || orderType || "general",
       products_interested: productsInterested
     }])
 

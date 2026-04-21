@@ -23,17 +23,27 @@ import Image from "next/image"
 import WhatsAppButton from "./whatsapp-button"
 import { useCart } from "@/lib/store/cart"
 import CartDrawer from "./cart/CartDrawer"
-import { ThemeToggle } from "./ThemeToggle"
-import { useState, useEffect } from "react"
+import dynamic from "next/dynamic"
+import { useEffect, useState } from "react"
+
+const ThemeToggle = dynamic(() => import("./ThemeToggle").then(mod => mod.ThemeToggle), { 
+  ssr: false,
+  loading: () => <div className="w-10 h-10 rounded-2xl bg-primary/5 animate-pulse" />
+})
 
 const navigation = [
   { name: "Home", href: "/" },
   { name: "Shop", href: "/shop" },
   { name: "Recipes", href: "/recipes" },
-  { name: "B2B", href: "/b2b" },
   { name: "Blog", href: "/blog" },
   { name: "About", href: "/about" },
+  { name: "FAQ", href: "/faq" },
   { name: "Contact", href: "/contact" },
+]
+
+const secondaryLinks = [
+  { name: "Track Order", href: "/track-order" },
+  { name: "Wholesale / B2B", href: "/b2b" },
 ]
 
 export default function Navbar() {
@@ -43,10 +53,10 @@ export default function Navbar() {
   const totalItems = useCart((s) => s.totalItems)
   const openCart = useCart((s) => s.openCart)
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    setIsMounted(true)
+    setMounted(true)
   }, [])
 
   const user = session?.user
@@ -112,7 +122,7 @@ export default function Navbar() {
                 aria-label="Open cart"
               >
                 <ShoppingCart className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                {isMounted && totalItems() > 0 && (
+                {mounted && totalItems() > 0 && (
                   <span className="absolute top-2 right-2 bg-primary text-white text-[10px] font-black rounded-lg min-w-[20px] h-[20px] flex items-center justify-center px-1 shadow-lg shadow-primary/30 animate-in fade-in zoom-in duration-300">
                     {totalItems()}
                   </span>
@@ -266,6 +276,19 @@ export default function Navbar() {
                           </div>
                         </div>
                       )}
+                      <div className="mt-6 pt-6 border-t border-slate-100 space-y-1">
+                        <p className="text-[10px] text-slate-400 font-black px-6 uppercase tracking-[0.2em] mb-2">More</p>
+                        {secondaryLinks.map((item) => (
+                          <Link
+                            key={item.name}
+                            href={item.href}
+                            onClick={() => setMobileOpen(false)}
+                            className="flex items-center py-3 px-6 rounded-2xl text-[15px] font-bold text-slate-500 hover:bg-primary/5 hover:text-primary transition-all"
+                          >
+                            {item.name}
+                          </Link>
+                        ))}
+                      </div>
                     </nav>
 
                     {/* Bottom actions */}

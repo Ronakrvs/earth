@@ -1,9 +1,47 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Phone, Mail, MapPin, Facebook, Instagram, Leaf } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Footer() {
+  const pathname = usePathname();
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  // Do not show footer on admin pages or auth pages
+  if (pathname?.startsWith("/admin") || pathname?.startsWith("/auth")) {
+    return null;
+  }
+
+  async function handleNewsletter(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, source: "footer" }),
+      });
+      if (res.ok) {
+        toast.success("You're in! 🌿 Welcome to the Shigruvedas circle.");
+        setEmail("");
+      } else {
+        const d = await res.json();
+        toast.error(d.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   const currentYear = new Date().getFullYear();
 
   // Social media links - replace with your actual social media URLs
@@ -79,14 +117,13 @@ export default function Footer() {
           </div>
 
           {/* Navigation Grid */}
-          <div className="lg:col-span-4 grid grid-cols-2 gap-8">
+          <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-8" suppressHydrationWarning>
             <div>
               <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-8">Sanctuary</h4>
               <ul className="space-y-4">
                 {[
                   { n: "Our Story", h: "/about" },
                   { n: "Shop All", h: "/shop" },
-                  { n: "B2B / Inquiry", h: "/b2b" },
                   { n: "Recipes", h: "/recipes" },
                   { n: "Blog Journal", h: "/blog" },
                 ].map((l) => (
@@ -102,11 +139,26 @@ export default function Footer() {
               <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-8">Assistance</h4>
               <ul className="space-y-4">
                 {[
+                  { n: "Track Order", h: "/track-order" },
+                  { n: "FAQ", h: "/faq" },
                   { n: "Contact Us", h: "/contact" },
-                  { n: "Shipping", h: "/shipping" },
-                  { n: "Bulk Orders", h: "/bulk" },
+                  { n: "Shipping Policy", h: "/shipping" },
+                ].map((l) => (
+                  <li key={l.n}>
+                    <Link href={l.h} className="text-muted-foreground hover:text-primary font-bold transition-colors">
+                      {l.n}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-8">Partners</h4>
+              <ul className="space-y-4">
+                {[
+                  { n: "Bulk / Wholesale", h: "/b2b" },
+                  { n: "Contract Farming", h: "/contract-farming" },
                   { n: "Farm Visit", h: "/farm-visit" },
-                  // { n: "Return Policy", h: "/returns" },
                 ].map((l) => (
                   <li key={l.n}>
                     <Link href={l.h} className="text-muted-foreground hover:text-primary font-bold transition-colors">
@@ -161,28 +213,42 @@ export default function Footer() {
           </div>
           <div className="max-w-2xl">
             <h3 className="text-2xl md:text-3xl font-black mb-4">Join the Healing <span className="text-gradient">Circle</span></h3>
-            <p className="text-muted-foreground font-medium mb-8">Subscribe for seasonal harvest updates, authentic recipes, and pure wellness wisdom.</p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <p className="text-muted-foreground font-medium mb-8">Subscribe for weekly health tips, moringa recipes, and exclusive offers. 8,000+ families already in.</p>
+            <form onSubmit={handleNewsletter} className="flex flex-col sm:flex-row gap-4">
               <input
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Your email address"
+                required
                 className="flex-1 h-14 bg-card/70 border border-white/10 rounded-2xl px-6 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               />
-              <Button className="h-14 px-8 bg-primary hover:bg-primary-dark text-white font-black rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95">
-                Illuminate Me
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-14 px-8 bg-primary hover:bg-primary-dark text-white font-black rounded-2xl shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-70"
+              >
+                {loading ? "Subscribing…" : "Subscribe Free →"}
               </Button>
-            </div>
+            </form>
+            <p className="text-xs text-muted-foreground/60 mt-3 font-medium">No spam. Unsubscribe anytime. 💚</p>
           </div>
         </div>
 
         <div className="pt-12 border-t border-border/60 flex flex-col md:flex-row justify-between items-center gap-8">
-          <p className="text-muted-foreground font-bold text-sm">
-            &copy; {currentYear} SHIGRUVEDAS. <span className="font-medium">CRAFTED FOR YOUR SOUL.</span>
-          </p>
+          <div className="text-center md:text-left">
+            <p className="text-muted-foreground font-bold text-sm" suppressHydrationWarning>
+              &copy; {currentYear} SHIGRUVEDAS. <span className="font-medium">CRAFTED FOR YOUR SOUL.</span>
+            </p>
+            <p className="text-muted-foreground/50 text-xs mt-1 font-medium">
+              FSSAI Lic. No.: 22226088000XXX &nbsp;
+            </p>
+          </div>
           <div className="flex flex-wrap justify-center gap-8 text-[12px] font-black uppercase tracking-widest text-muted-foreground">
-            {["Privacy", "Terms", "Shipping"].map((t) => (
+            {["Privacy", "Terms", "Shipping", "FAQ"].map((t) => (
               <Link key={t} href={`/${t.toLowerCase()}`} className="hover:text-primary transition-colors">{t}</Link>
             ))}
+            <Link href="/track-order" className="hover:text-primary transition-colors">Track Order</Link>
           </div>
         </div>
 
@@ -190,7 +256,7 @@ export default function Footer() {
         <div className="mt-16 pt-8 border-t border-border/60 text-[10px] text-muted-foreground/80 font-medium text-center tracking-[0.1em] uppercase">
           <p className="mb-2 leading-relaxed max-w-4xl mx-auto">
             Organic Moringa Rajasthan · Moringa Farm Udaipur · Fresh Moringa Leaves · Organic Moringa Powder · Drumsticks · Chemical-free 
-            Farming · Sustainable Agriculture · Bulk Moringa Supplier India · Moringa Wellness Rajasthan
+            Farming · Sustainable Agriculture · Bulk Moringa Supplier India · Moringa Wellness Rajasthan · Contract Farming India
           </p>
           <p className="text-primary/40">
             Rajasthan's Purest Harvest · From Our Soil to Your Soul
@@ -198,35 +264,6 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Structured Data for Organization */}
-      <script 
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Organization",
-            "name": "Shigruvedas",
-            "url": "https://shigruvedas.com",
-            "logo": "https://shigruvedas.com/images/image.png",
-            "sameAs": socialLinks.map(link => link.url),
-            "contactPoint": {
-              "@type": "ContactPoint",
-              "telephone": "+91-9166599895",
-              "contactType": "customer service",
-              "email": "shigruvedas@gmail.com",
-              "availableLanguage": ["English", "Hindi"]
-            },
-            "address": {
-              "@type": "PostalAddress",
-              "streetAddress": "248, A-Block, Hiran Magri",
-              "addressLocality": "Udaipur",
-              "addressRegion": "Rajasthan",
-              "postalCode": "313002",
-              "addressCountry": "IN"
-            }
-          })
-        }}
-      />
     </footer>
   )
 }

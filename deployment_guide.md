@@ -9,6 +9,7 @@ This guide outlines the steps to deploy the Shigruvedas organic moringa store to
 2. Go to the **SQL Editor** in your Supabase dashboard.
 3. Copy the contents of `supabase/schema.sql` from the project.
 4. Paste and run the SQL to create all necessary tables (products, variants, orders, etc.) and RLS policies.
+5. Also run `supabase/migrations.sql` and the other Supabase SQL files in the repository so later columns such as `checkout_session_id`, `shiprocket_*`, `coupon_id`, `points_used`, and `addresses.user_email` exist in the live database.
 
 ### Authentication
 1. Go to **Authentication > Providers**.

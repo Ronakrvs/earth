@@ -40,25 +40,16 @@ export async function createAdminClient() {
     throw new Error("Missing Supabase Admin environment variables.")
   }
 
-  const cookieStore = await cookies()
-  return createServerClient(
-    supabaseUrl,
-    serviceKey,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            )
-          } catch {}
-        },
-      },
-    }
-  )
+  // Admin/server-side queries should not participate in browser auth session
+  // refresh flows. Use the service role key directly to avoid stale refresh
+  // token errors bubbling up during React server rendering.
+  return createSupabaseClient(supabaseUrl, serviceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  })
 }
 
 // For use in generateStaticParams which runs at build time (no cookies)

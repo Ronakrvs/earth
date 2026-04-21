@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { 
   Settings, Globe, Share2, Shield, 
-  Save, Landmark, BellRing, Mail, Loader2 
+  Save, Landmark, BellRing, Mail, Loader2,
+  Megaphone, Zap, Gift, Users, CreditCard, LayoutGrid
 } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 
@@ -97,7 +99,8 @@ export default function AdminSettingsPage() {
            {[
              { id: "general", label: "General Store", icon: Landmark },
              { id: "seo", label: "SEO & Meta", icon: Globe },
-             { id: "social", label: "Social Presence", icon: Share2 },
+             { id: "business", label: "Business Tools", icon: Settings },
+             { id: "social", label: "Social", icon: Share2 },
              { id: "notifications", label: "Notifications", icon: BellRing },
              { id: "security", label: "Security & Access", icon: Shield },
            ].map((tab) => (
@@ -201,6 +204,121 @@ export default function AdminSettingsPage() {
                 </CardContent>
              </Card>
            )}
+
+            {activeTab === "business" && (
+              <div className="space-y-6">
+                <Card className="border-none shadow-sm rounded-[32px] overflow-hidden">
+                   <CardHeader className="p-8 pb-0">
+                      <div className="flex items-center gap-3">
+                        <Megaphone className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-xl font-black text-slate-900">Announcement Bar</CardTitle>
+                      </div>
+                   </CardHeader>
+                   <CardContent className="p-8 space-y-6">
+                      <div className="space-y-2">
+                         <Label htmlFor="ann-text" className="text-xs font-bold uppercase tracking-widest text-slate-400">Announcement Text</Label>
+                         <Input 
+                          id="ann-text" 
+                          value={settings.announcement_text || ""} 
+                          onChange={(e) => setSettings({...settings, announcement_text: e.target.value})}
+                          placeholder="e.g. Free shipping on orders above ₹499"
+                          className="rounded-xl border-slate-100 h-12 font-medium" 
+                         />
+                      </div>
+                      <div className="space-y-2">
+                         <Label htmlFor="ann-link" className="text-xs font-bold uppercase tracking-widest text-slate-400">Announcement Link</Label>
+                         <Input 
+                          id="ann-link" 
+                          value={settings.announcement_link || ""} 
+                          onChange={(e) => setSettings({...settings, announcement_link: e.target.value})}
+                          placeholder="/shop"
+                          className="rounded-xl border-slate-100 h-12 font-medium" 
+                         />
+                      </div>
+                   </CardContent>
+                </Card>
+
+                <Card className="border-none shadow-sm rounded-[32px] overflow-hidden">
+                   <CardHeader className="p-8 pb-0">
+                      <div className="flex items-center gap-3">
+                        <Zap className="h-5 w-5 text-primary" />
+                        <CardTitle className="text-xl font-black text-slate-900">Feature Toggles</CardTitle>
+                      </div>
+                   </CardHeader>
+                   <CardContent className="p-8 space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                         <div className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5 text-slate-400" />
+                            <div>
+                               <div className="font-bold text-slate-900">Subscription System</div>
+                               <div className="text-xs text-slate-400 font-medium">Enable recurring delivery options</div>
+                            </div>
+                         </div>
+                         <Switch 
+                          checked={settings.subscription_enabled} 
+                          onCheckedChange={(checked) => setSettings({...settings, subscription_enabled: checked})}
+                         />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                         <div className="flex items-center gap-3">
+                            <Users className="h-5 w-5 text-slate-400" />
+                            <div>
+                               <div className="font-bold text-slate-900">Referral Program</div>
+                               <div className="text-xs text-slate-400 font-medium">Allow customers to refer friends for rewards</div>
+                            </div>
+                         </div>
+                         <Switch 
+                          checked={settings.referral_enabled} 
+                          onCheckedChange={(checked) => setSettings({...settings, referral_enabled: checked})}
+                         />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                         <div className="flex items-center gap-3">
+                            <Gift className="h-5 w-5 text-slate-400" />
+                            <div>
+                               <div className="font-bold text-slate-900">Loyalty Points</div>
+                               <div className="text-xs text-slate-400 font-medium">Enable earning and redeeming points</div>
+                            </div>
+                         </div>
+                         <Switch 
+                          checked={settings.loyalty_enabled} 
+                          onCheckedChange={(checked) => setSettings({...settings, loyalty_enabled: checked})}
+                         />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                         <div className="flex items-center gap-3">
+                            <Zap className="h-5 w-5 text-slate-400" />
+                            <div>
+                               <div className="font-bold text-slate-900">Coupon System</div>
+                               <div className="text-xs text-slate-400 font-medium">Enable discount codes at checkout</div>
+                            </div>
+                         </div>
+                         <Switch 
+                          checked={settings.coupon_enabled} 
+                          onCheckedChange={(checked) => setSettings({...settings, coupon_enabled: checked})}
+                         />
+                      </div>
+
+                      <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                         <div className="flex items-center gap-3">
+                            <LayoutGrid className="h-5 w-5 text-slate-400" />
+                            <div>
+                               <div className="font-bold text-slate-900">Product Bundles</div>
+                               <div className="text-xs text-slate-400 font-medium">Enable curated bundles across the site</div>
+                            </div>
+                         </div>
+                         <Switch 
+                          checked={settings.bundles_enabled} 
+                          onCheckedChange={(checked) => setSettings({...settings, bundles_enabled: checked})}
+                         />
+                      </div>
+                   </CardContent>
+                </Card>
+              </div>
+            )}
 
            {activeTab === "social" && (
              <Card className="border-none shadow-sm rounded-[32px] overflow-hidden">

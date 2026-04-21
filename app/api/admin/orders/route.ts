@@ -5,21 +5,13 @@ import { createAdminClient } from "@/lib/supabase/server"
 export async function GET() {
   try {
     const session = await auth()
-    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    
+    // Consistent and efficient authorization check
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (session.user.role !== "admin") return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
     const supabase = await createAdminClient()
     
-    // Auth check
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', session.user.id)
-      .single()
-
-    if (profile?.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-
     const { data: orders, error } = await supabase
       .from("orders")
       .select(`

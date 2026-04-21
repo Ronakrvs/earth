@@ -42,6 +42,8 @@ async function check() {
 
   const { count: variantCount, error: variantError } = await supabase.from('product_variants').select('*', { count: 'exact', head: true })
   console.log(`Product Variants: ${variantError ? '❌ Error: ' + variantError.message : variantCount + ' rows'}`)
+  const { count: settingsCount, error: settingsError } = await supabase.from("settings").select("*", { count: "exact", head: true })
+  console.log(`Settings: ${settingsError ? "❌ Error: " + settingsError.message : settingsCount + " rows"}`)
 }
 
 check()

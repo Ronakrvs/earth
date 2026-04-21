@@ -16,7 +16,7 @@ export default async function AdminReviewsPage() {
     .eq('id', session?.user?.id || '')
     .single()
 
-  if (profile?.role !== "admin") redirect("/")
+  if (session?.user?.role !== "admin" && profile?.role !== "admin") redirect("/")
 
   const { data: reviews } = await supabase
     .from("reviews")

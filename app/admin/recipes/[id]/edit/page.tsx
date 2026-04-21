@@ -18,7 +18,7 @@ export default async function EditRecipePage({
     .eq('id', session?.user?.id || '')
     .single()
 
-  if (profile?.role !== "admin") redirect("/")
+  if (session?.user?.role !== "admin" && profile?.role !== "admin") redirect("/")
 
   const { data: recipe } = await supabase
     .from("recipes")

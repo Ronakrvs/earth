@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { createAdminClient } from "@/lib/supabase/server"
+import { isAdminSession } from "@/lib/admin-auth"
 
 export async function GET() {
   try {
@@ -16,7 +17,7 @@ export async function GET() {
       .eq('id', session.user.id)
       .single()
 
-    if (profile?.role !== "admin") {
+    if (!isAdminSession(session, profile?.role)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 

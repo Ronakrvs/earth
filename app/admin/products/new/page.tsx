@@ -13,7 +13,7 @@ export default async function NewProductPage() {
     .eq('id', session?.user?.id || '')
     .single()
 
-  if (profile?.role !== "admin") redirect("/")
+  if (session?.user?.role !== "admin" && profile?.role !== "admin") redirect("/")
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-6">

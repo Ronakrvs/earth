@@ -8,13 +8,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MoringaCard } from "@/components/ui/moringa-card"
+import { createAdminClient } from "@/lib/supabase/server"
 import * as motion from "framer-motion/client"
-
-const NAV_ITEMS = [
-  { href: "/profile/orders", icon: Package, label: "Acquisition History", desc: "Review your botanical heritage", color: "text-primary bg-primary/5", badge: null },
-  { href: "/profile/addresses", icon: MapPin, label: "Delivery Nexus", desc: "Manage your shipping coordinates", color: "text-emerald-600 bg-emerald-50", badge: null },
-  { href: "/profile/settings", icon: Settings, label: "Core Protocol", desc: "Refine your alchemical identity", color: "text-muted-foreground bg-muted", badge: null },
-]
 
 const QUICK_STATS = [
   { label: "Manifested", value: "0", icon: ShoppingBag, color: "text-primary bg-primary/5" },
@@ -26,9 +21,27 @@ export default async function ProfilePage() {
   const session = await auth()
   if (!session) redirect("/auth/login?callbackUrl=/profile")
 
+  const supabase = await createAdminClient()
+  
+  // Fetch settings for feature toggles
+  const { data: settingsData } = await supabase
+    .from("settings")
+    .select("value")
+    .eq("key", "config")
+    .maybeSingle()
+  
+  const config = settingsData?.value || { loyalty_enabled: true }
+
+  const navItems = [
+    { href: "/profile/orders", icon: Package, label: "Acquisition History", desc: "Review your botanical heritage", color: "text-primary bg-primary/5", badge: null },
+    ...(config.loyalty_enabled !== false ? [{ href: "/profile/loyalty", icon: Sparkles, label: "Vitality Points", desc: "View your earned organic essence", color: "text-amber-600 bg-amber-50", badge: null }] : []),
+    { href: "/profile/addresses", icon: MapPin, label: "Delivery Nexus", desc: "Manage your shipping coordinates", color: "text-emerald-600 bg-emerald-50", badge: null },
+    { href: "/profile/settings", icon: Settings, label: "Core Protocol", desc: "Refine your alchemical identity", color: "text-muted-foreground bg-muted", badge: null },
+  ]
+
   const initials = session.user?.name
     ?.split(" ")
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join("")
     .toUpperCase()
     .slice(0, 2) || "U"
@@ -114,7 +127,7 @@ export default async function ProfilePage() {
                 <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">Operational Core</h2>
             </div>
             <div className="divide-y divide-primary/5">
-              {NAV_ITEMS.map(({ href, icon: Icon, label, desc, color }, i) => (
+              {navItems.map(({ href, icon: Icon, label, desc, color }: any, i: number) => (
                 <Link key={href} href={href} className="group flex items-center gap-6 p-8 hover:bg-card/50 transition-all">
                     <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform duration-500`}>
                       <Icon className="h-6 w-6" />

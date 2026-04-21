@@ -22,7 +22,7 @@ export default async function AdminProductsPage() {
     .eq('id', session.user.id)
     .single()
 
-  if (profile?.role !== "admin") redirect("/")
+  if (session?.user?.role !== "admin" && profile?.role !== "admin") redirect("/")
 
   const { data: products, error } = await supabase
     .from("products")

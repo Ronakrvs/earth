@@ -6,6 +6,7 @@ import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import Providers from "@/components/Providers"
 import ThemeWrapper from "@/components/layout/ThemeWrapper"
+import AnnouncementBar from "@/components/AnnouncementBar"
 import { Toaster } from "sonner"
 import Script from "next/script"
 
@@ -76,9 +77,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  alternates: {
-    canonical: "https://shigruvedas.com",
-  },
 }
 
 export const viewport: Viewport = {
@@ -91,20 +89,62 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Shigruvedas",
+    "url": "https://shigruvedas.com",
+    "logo": "https://shigruvedas.com/placeholder-logo.png",
+    "sameAs": [
+      "https://facebook.com/shigruvedas",
+      "https://instagram.com/shigruvedas"
+    ],
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+91-9166599895",
+      "contactType": "customer service",
+      "areaServed": "IN",
+      "availableLanguage": "en"
+    }
+  }
+
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Shigruvedas",
+    "url": "https://shigruvedas.com",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://shigruvedas.com/shop?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+
   return (
     <html lang="en-IN" suppressHydrationWarning className={`${outfit.variable} ${jakarta.variable} scroll-smooth`}>
       <head>
+        {/* JSON-LD Structured Data — use plain <script> tags, not next/script */}
+        <script
+          id="json-ld-organization"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <script
+          id="json-ld-website"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="icon" href="/favicon.ico" sizes="any" />
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="icon" href="/placeholder-logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/placeholder-logo.png" />
         <link rel="manifest" href="/manifest.json" />
         <meta name="format-detection" content="telephone=yes" />
         <meta name="HandheldFriendly" content="true" />
         <meta name="MobileOptimized" content="width" />
-        {/* ... existing scripts ... */}
         <script
+          id="json-ld-local-business"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -116,8 +156,8 @@ export default function RootLayout({
               "url": "https://shigruvedas.com",
               "telephone": "+91-9166599895",
               "email": "shigruvedas@gmail.com",
-              "logo": "https://shigruvedas.com/logo.png",
-              "image": "https://shigruvedas.com/moringa-farm.jpg",
+              "logo": "https://shigruvedas.com/placeholder-logo.png",
+              "image": "https://shigruvedas.com/moringa.png",
               "address": {
                 "@type": "PostalAddress",
                 "streetAddress": "248, A-Block, hiran magri",
@@ -156,10 +196,7 @@ export default function RootLayout({
                       "name": "Fresh Organic Moringa Leaves",
                       "description": "Hand-picked daily from our organic farms in Rajasthan. Rich in 90+ nutrients including Vitamin C, Iron, and Protein.",
                       "category": "Organic Vegetables",
-                      "brand": {
-                        "@type": "Brand",
-                        "name": "Shigruvedas"
-                      }
+                      "brand": { "@type": "Brand", "name": "Shigruvedas" }
                     },
                     "availability": "https://schema.org/InStock",
                     "priceCurrency": "INR"
@@ -171,10 +208,7 @@ export default function RootLayout({
                       "name": "Organic Moringa Powder",
                       "description": "Premium quality dried and powdered moringa leaves. Perfect for smoothies, cooking, and daily supplements.",
                       "category": "Health Supplements",
-                      "brand": {
-                        "@type": "Brand",
-                        "name": "Shigruvedas"
-                      }
+                      "brand": { "@type": "Brand", "name": "Shigruvedas" }
                     },
                     "availability": "https://schema.org/InStock",
                     "priceCurrency": "INR"
@@ -186,10 +220,7 @@ export default function RootLayout({
                       "name": "Fresh Moringa Drumsticks",
                       "description": "Young, tender moringa pods perfect for traditional Indian cooking. Rich in fiber, vitamins, and minerals.",
                       "category": "Organic Vegetables",
-                      "brand": {
-                        "@type": "Brand",
-                        "name": "Shigruvedas"
-                      }
+                      "brand": { "@type": "Brand", "name": "Shigruvedas" }
                     },
                     "availability": "https://schema.org/InStock",
                     "priceCurrency": "INR"
@@ -207,6 +238,7 @@ export default function RootLayout({
           }}
         />
         <script
+          id="json-ld-organization-extra"
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
@@ -240,6 +272,7 @@ export default function RootLayout({
           }}
         />
       </head>
+
       
       <body className={`${outfit.className} bg-background font-outfit selection:bg-primary/20 selection:text-primary`}>
         <Providers>
@@ -248,6 +281,7 @@ export default function RootLayout({
           </a>
           
           <ThemeWrapper>
+            <AnnouncementBar />
             <Navbar />
             <main id="main-content" role="main" className="flex-1">
               {children}

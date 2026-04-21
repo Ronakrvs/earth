@@ -21,6 +21,20 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ==========================================
+-- SECURITY DEFINER — Admin Check
+-- This avoids recursion in RLS policies
+-- ==========================================
+CREATE OR REPLACE FUNCTION public.check_is_admin()
+RETURNS boolean AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND role = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
 -- Auto-create profile on user signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -82,7 +96,8 @@ CREATE TABLE IF NOT EXISTS public.product_variants (
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.addresses (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  user_email TEXT,
   full_name TEXT NOT NULL,
   phone TEXT NOT NULL,
   address_line1 TEXT NOT NULL,
@@ -100,6 +115,8 @@ CREATE TABLE IF NOT EXISTS public.addresses (
 CREATE TABLE IF NOT EXISTS public.orders (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  user_email TEXT,
+  checkout_session_id TEXT UNIQUE,
   order_number TEXT UNIQUE NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded')),
   payment_status TEXT NOT NULL DEFAULT 'pending' CHECK (payment_status IN ('pending', 'paid', 'failed', 'refunded')),
@@ -110,6 +127,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
   subtotal DECIMAL(10, 2) NOT NULL,
   shipping_amount DECIMAL(10, 2) DEFAULT 0,
   discount_amount DECIMAL(10, 2) DEFAULT 0,
+  points_used INTEGER DEFAULT 0,
   total DECIMAL(10, 2) NOT NULL,
   -- Shipping address snapshot (in case address changes)
   shipping_name TEXT NOT NULL,
@@ -120,6 +138,11 @@ CREATE TABLE IF NOT EXISTS public.orders (
   shipping_pincode TEXT NOT NULL,
   notes TEXT,
   tracking_number TEXT,
+  shiprocket_order_id TEXT,
+  shiprocket_shipment_id TEXT,
+  shiprocket_awb TEXT,
+  shiprocket_status TEXT,
+  shiprocket_last_synced_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -251,6 +274,37 @@ CREATE TABLE IF NOT EXISTS public.contact_messages (
 );
 
 -- ==========================================
+-- SETTINGS TABLE
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.settings (
+  key TEXT PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "settings_read_public" ON public.settings FOR SELECT USING (true);
+CREATE POLICY "settings_admin_all" ON public.settings FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- ==========================================
+-- SEED DATA — Settings Config
+-- ==========================================
+INSERT INTO public.settings (key, value) VALUES
+('config', '{
+  "storeName": "SHIGRUVEDAS",
+  "announcement_text": "🌿 Premium Moringa - Direct from our Organic Farm",
+  "announcement_link": "/shop",
+  "loyalty_enabled": true,
+  "bundles_enabled": true,
+  "subscription_enabled": true,
+  "referral_enabled": true,
+  "coupon_enabled": true
+}')
+ON CONFLICT (key) DO NOTHING;
+
+-- ==========================================
 -- SEED DATA — Products
 -- ==========================================
 INSERT INTO public.products (name, slug, description, short_description, category, thumbnail, is_active, is_featured) VALUES
@@ -338,21 +392,15 @@ ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 -- Profiles: users can view and edit their own profile; admins can view all
 CREATE POLICY "profiles_select_own" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles_update_own" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "profiles_select_admin" ON public.profiles FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "profiles_select_admin" ON public.profiles FOR SELECT USING (check_is_admin());
 
 -- Products: publicly readable; only admins can write
 CREATE POLICY "products_select_public" ON public.products FOR SELECT USING (is_active = true);
-CREATE POLICY "products_all_admin" ON public.products FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "products_all_admin" ON public.products FOR ALL USING (check_is_admin());
 
 -- Product variants: publicly readable
 CREATE POLICY "variants_select_public" ON public.product_variants FOR SELECT USING (is_active = true);
-CREATE POLICY "variants_all_admin" ON public.product_variants FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "variants_all_admin" ON public.product_variants FOR ALL USING (check_is_admin());
 
 -- Addresses: users own their addresses
 CREATE POLICY "addresses_own" ON public.addresses FOR ALL USING (auth.uid() = user_id);
@@ -360,48 +408,34 @@ CREATE POLICY "addresses_own" ON public.addresses FOR ALL USING (auth.uid() = us
 -- Orders: users see their own orders; admins see all
 CREATE POLICY "orders_select_own" ON public.orders FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "orders_insert_own" ON public.orders FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "orders_all_admin" ON public.orders FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "orders_all_admin" ON public.orders FOR ALL USING (check_is_admin());
 
 -- Order items: follow order visibility
 CREATE POLICY "order_items_select" ON public.order_items FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.orders WHERE orders.id = order_id AND orders.user_id = auth.uid())
 );
-CREATE POLICY "order_items_admin" ON public.order_items FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "order_items_admin" ON public.order_items FOR ALL USING (check_is_admin());
 
 -- Reviews: approved reviews are public; users manage their own
 CREATE POLICY "reviews_select_public" ON public.reviews FOR SELECT USING (is_approved = true);
 CREATE POLICY "reviews_insert_auth" ON public.reviews FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "reviews_update_own" ON public.reviews FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "reviews_admin" ON public.reviews FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "reviews_admin" ON public.reviews FOR ALL USING (check_is_admin());
 
 -- B2B: anyone can insert; only admins can read/manage
 CREATE POLICY "b2b_insert" ON public.b2b_inquiries FOR INSERT WITH CHECK (true);
-CREATE POLICY "b2b_admin" ON public.b2b_inquiries FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "b2b_admin" ON public.b2b_inquiries FOR ALL USING (check_is_admin());
 
 -- Blog: published posts are public; admin manages all
 CREATE POLICY "blog_select_public" ON public.blog_posts FOR SELECT USING (is_published = true);
-CREATE POLICY "blog_admin" ON public.blog_posts FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "blog_admin" ON public.blog_posts FOR ALL USING (check_is_admin());
 
 -- Recipes: publicly readable; admin manages all
 ALTER TABLE public.recipes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "recipes_select_public" ON public.recipes FOR SELECT USING (is_active = true);
-CREATE POLICY "recipes_admin" ON public.recipes FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "recipes_admin" ON public.recipes FOR ALL USING (check_is_admin());
 
 -- Contact messages: anyone can insert; only admin can read
 ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "contact_insert_public" ON public.contact_messages FOR INSERT WITH CHECK (true);
-CREATE POLICY "contact_admin" ON public.contact_messages FOR ALL USING (
-  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
-);
+CREATE POLICY "contact_admin" ON public.contact_messages FOR ALL USING (check_is_admin());
