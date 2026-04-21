@@ -104,16 +104,27 @@ export default function CheckoutPage() {
         const payload = await res.json()
         if (!active || !res.ok) return
         const addresses = Array.isArray(payload) ? payload : []
-        setSavedAddresses(addresses)
+        const normalized = addresses.map((a: any) => ({
+          id: a.id,
+          fullName: a.full_name || a.fullName || "",
+          phone: a.phone || "",
+          line1: a.address_line1 || a.line1 || "",
+          line2: a.address_line2 || a.line2 || "",
+          city: a.city || "",
+          state: a.state || "",
+          pincode: a.pincode || "",
+          isDefault: Boolean(a.is_default ?? a.isDefault),
+        })) as SavedAddress[]
+        setSavedAddresses(normalized)
 
-        const chosen = addresses.find((a) => a.is_default || a.isDefault) || addresses[0]
+        const chosen = normalized.find((a) => a.isDefault) || normalized[0]
         if (!chosen) return
 
         const mapped: AddressData = {
-          full_name: chosen.full_name || chosen.fullName || session?.user?.name || "",
+          full_name: chosen.fullName || session?.user?.name || "",
           phone: chosen.phone || "",
-          address_line1: chosen.address_line1 || chosen.line1 || "",
-          address_line2: chosen.address_line2 || chosen.line2 || "",
+          address_line1: chosen.line1 || "",
+          address_line2: chosen.line2 || "",
           city: chosen.city || "",
           state: chosen.state || "",
           pincode: chosen.pincode || "",
@@ -141,7 +152,7 @@ export default function CheckoutPage() {
   const onAddressSubmit = async (data: AddressData) => {
     try {
       const existing = savedAddresses
-      const existingDefault = existing.find((a) => a.is_default || a.isDefault)
+      const existingDefault = existing.find((a) => a.isDefault)
       const payload = {
         full_name: data.full_name,
         phone: data.phone,
@@ -171,7 +182,18 @@ export default function CheckoutPage() {
       }
 
       if (!saved?.id) throw new Error(saved?.error || "Failed to save address")
-      setSavedAddresses((prev) => [saved, ...prev.filter((a) => a.id !== saved.id)])
+      const normalizedSaved: SavedAddress = {
+        id: saved.id,
+        fullName: saved.full_name || saved.fullName || data.full_name,
+        phone: saved.phone || data.phone,
+        line1: saved.address_line1 || saved.line1 || data.address_line1,
+        line2: saved.address_line2 || saved.line2 || data.address_line2 || "",
+        city: saved.city || data.city,
+        state: saved.state || data.state,
+        pincode: saved.pincode || data.pincode,
+        isDefault: Boolean(saved.is_default ?? saved.isDefault ?? true),
+      }
+      setSavedAddresses((prev) => [normalizedSaved, ...prev.filter((a) => a.id !== normalizedSaved.id)])
       setSavedAddress(data)
       setStep(2)
     } catch (error: any) {
