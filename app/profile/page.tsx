@@ -2,35 +2,47 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import {
-    Package, MapPin, Settings, LogOut, ChevronRight,
-    ShoppingBag, Heart, Star, Shield, Leaf, ArrowUpRight, Zap, Sparkles
+    Package, MapPin, Settings, ChevronRight,
+    ShoppingBag, Heart, Shield, ArrowUpRight, Zap, Sparkles
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { MoringaCard } from "@/components/ui/moringa-card"
 import { createAdminClient } from "@/lib/supabase/server"
 import * as motion from "framer-motion/client"
+import SignOutButton from "@/components/profile/SignOutButton"
 
-const QUICK_STATS = [
-  { label: "Manifested", value: "0", icon: ShoppingBag, color: "text-primary bg-primary/5" },
-  { label: "Favorites", value: "0", icon: Heart, color: "text-rose-600 bg-rose-50" },
-  { label: "Rank", value: "Novice", icon: Zap, color: "text-amber-600 bg-amber-50" },
-]
+function getRank(orderCount: number): string {
+  if (orderCount >= 10) return "Guardian"
+  if (orderCount >= 5) return "Alchemist"
+  if (orderCount >= 2) return "Cultivator"
+  return "Novice"
+}
 
 export default async function ProfilePage() {
   const session = await auth()
   if (!session) redirect("/auth/login?callbackUrl=/profile")
 
   const supabase = await createAdminClient()
-  
-  // Fetch settings for feature toggles
-  const { data: settingsData } = await supabase
-    .from("settings")
-    .select("value")
-    .eq("key", "config")
-    .maybeSingle()
-  
-  const config = settingsData?.value || { loyalty_enabled: true }
+  const userId = session.user.id
+
+  const [settingsResult, orderCountResult, loyaltyResult, wishlistCountResult] = await Promise.all([
+    supabase.from("settings").select("value").eq("key", "config").maybeSingle(),
+    supabase.from("orders").select("id", { count: "exact", head: true }).eq("user_id", userId),
+    supabase.from("loyalty_balances").select("balance").eq("user_id", userId).maybeSingle(),
+    supabase.from("wishlists").select("id", { count: "exact", head: true }).eq("user_id", userId),
+  ])
+
+  const config = settingsResult.data?.value || { loyalty_enabled: true }
+  const orderCount = orderCountResult.count ?? 0
+  const loyaltyBalance = (loyaltyResult.data?.balance as number) ?? 0
+  const wishlistCount = wishlistCountResult.count ?? 0
+
+  const quickStats = [
+    { label: "Manifested", value: String(orderCount), icon: ShoppingBag, color: "text-primary bg-primary/5" },
+    { label: "Favorites", value: String(wishlistCount), icon: Heart, color: "text-rose-600 bg-rose-50" },
+    { label: "Rank", value: getRank(orderCount), icon: Zap, color: "text-amber-600 bg-amber-50" },
+  ]
 
   const navItems = [
     { href: "/profile/orders", icon: Package, label: "Acquisition History", desc: "Review your botanical heritage", color: "text-primary bg-primary/5", badge: null },
@@ -76,7 +88,7 @@ export default async function ProfilePage() {
 
              <div className="text-center md:text-left space-y-2 flex-1">
                 <div className="flex flex-col md:flex-row md:items-center gap-3">
-                    <h1 className="text-4xl font-black text-foreground tracking-tighter italic">Greetings, {session.user?.name?.split(" ")[0] || "Keeper"}.</h1>
+                    <h1 className="text-2xl sm:text-4xl font-black text-foreground tracking-tighter italic">Greetings, {session.user?.name?.split(" ")[0] || "Keeper"}.</h1>
                     <Badge className="w-fit mx-auto md:mx-0 bg-primary/10 text-primary border-none text-[10px] font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full">
                         {(session.user as any)?.role === "admin" ? "Grand Alchemist" : "Botanical Member"}
                     </Badge>
@@ -101,7 +113,7 @@ export default async function ProfilePage() {
       <div className="container mx-auto max-w-4xl px-6 space-y-8">
         {/* Quick Insights Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {QUICK_STATS.map(({ label, value, icon: Icon, color }, i) => (
+          {quickStats.map(({ label, value, icon: Icon, color }, i) => (
             <motion.div
                 key={label}
                 initial={{ opacity: 0, y: 20 }}
@@ -128,15 +140,15 @@ export default async function ProfilePage() {
             </div>
             <div className="divide-y divide-primary/5">
               {navItems.map(({ href, icon: Icon, label, desc, color }: any, i: number) => (
-                <Link key={href} href={href} className="group flex items-center gap-6 p-8 hover:bg-card/50 transition-all">
-                    <div className={`w-14 h-14 ${color} rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform duration-500`}>
-                      <Icon className="h-6 w-6" />
+                <Link key={href} href={href} className="group flex items-center gap-4 sm:gap-6 p-5 sm:p-8 hover:bg-card/50 transition-all">
+                    <div className={`w-12 h-12 sm:w-14 sm:h-14 ${color} rounded-2xl flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform duration-500`}>
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <div className="flex-1 space-y-1 text-left">
-                      <div className="text-lg font-black text-foreground tracking-tight italic group-hover:text-primary transition-colors">{label}</div>
-                      <div className="text-xs font-medium text-muted-foreground">{desc}</div>
+                    <div className="flex-1 space-y-0.5 sm:space-y-1 text-left min-w-0">
+                      <div className="text-base sm:text-lg font-black text-foreground tracking-tight italic group-hover:text-primary transition-colors truncate">{label}</div>
+                      <div className="text-xs font-medium text-muted-foreground hidden sm:block">{desc}</div>
                     </div>
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-muted flex items-center justify-center opacity-30 sm:opacity-0 group-hover:opacity-100 group-hover:translate-x-2 transition-all duration-500 flex-shrink-0">
                         <ChevronRight className="h-4 w-4 text-foreground" />
                     </div>
                 </Link>
@@ -151,21 +163,21 @@ export default async function ProfilePage() {
                animate={{ opacity: 1, scale: 1 }}
            >
               <Link href="/admin">
-                <div className="relative group overflow-hidden rounded-[2.5rem] p-10 bg-card text-foreground shadow-2xl shadow-primary/10">
+                <div className="relative group overflow-hidden rounded-[2.5rem] p-6 sm:p-10 bg-card text-foreground shadow-2xl shadow-primary/10">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none transition-all group-hover:scale-150" />
-                    <div className="relative z-10 flex items-center gap-8">
-                        <div className="w-20 h-20  bg-card/50 backdrop-blur-3xl rounded-[2rem] flex items-center justify-center shrink-0 border border-border/40 group-hover:rotate-12 transition-transform duration-500">
-                            <Shield className="h-10 w-10 text-primary" />
+                    <div className="relative z-10 flex items-center gap-5 sm:gap-8">
+                        <div className="w-14 h-14 sm:w-20 sm:h-20 bg-card/50 backdrop-blur-3xl rounded-[2rem] flex items-center justify-center shrink-0 border border-border/40 group-hover:rotate-12 transition-transform duration-500">
+                            <Shield className="h-7 w-7 sm:h-10 sm:w-10 text-primary" />
                         </div>
-                        <div className="flex-1 text-left space-y-2">
-                            <div className="text-3xl font-black tracking-tighter italic">Alchemical Chamber</div>
+                        <div className="flex-1 text-left space-y-1 sm:space-y-2 min-w-0">
+                            <div className="text-xl sm:text-3xl font-black tracking-tighter italic">Alchemical Chamber</div>
                             <div className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80">Supreme Administrative Nexus</div>
-                            <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-md">
+                            <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-md hidden sm:block">
                                 Orchestrate the botanical cycle. Manage flora, acquisition streams, and the alchemical database.
                             </p>
                         </div>
-                        <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-xl group-hover:translate-x-4 transition-all duration-500">
-                            <ChevronRight className="h-8 w-8 text-primary-foreground" />
+                        <div className="w-11 h-11 sm:w-16 sm:h-16 rounded-full bg-primary flex items-center justify-center shadow-xl group-hover:translate-x-4 transition-all duration-500 flex-shrink-0">
+                            <ChevronRight className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
                         </div>
                     </div>
                 </div>
@@ -174,19 +186,12 @@ export default async function ProfilePage() {
         )}
 
         {/* Neutralize Session (Sign Out) */}
-        <motion.div 
+        <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex justify-center pt-8"
         >
-            <form action="/api/auth/signout" method="POST" className="w-full">
-                <button className="group w-full flex items-center justify-center gap-6 p-8 border border-border rounded-[2.5rem]  bg-card hover:bg-destructive/10 hover:border-destructive/20 transition-all duration-500 group overflow-hidden relative">
-                   <div className="flex items-center gap-4 relative z-10">
-                        <LogOut className="h-5 w-5 text-muted-foreground/70 group-hover:text-destructive group-hover:-translate-x-2 transition-all duration-500" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground group-hover:text-destructive transition-colors">Neutralize Session</span>
-                   </div>
-                </button>
-            </form>
+            <SignOutButton />
         </motion.div>
       </div>
     </div>

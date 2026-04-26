@@ -144,7 +144,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
 
-      <div className="container mx-auto px-4 max-w-7xl py-12 md:py-20">
+      <div className="container mx-auto px-4 max-w-7xl py-8 md:py-20 pb-24 md:pb-20">
         {/* Product detail */}
         <div className="mb-20">
           <ProductDetailClient product={product} subscriptionEnabled={subscriptionEnabled} />

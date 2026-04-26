@@ -5,6 +5,24 @@ import Link from "next/link"
 import { ChevronLeft, History, Package, ShoppingBag, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MoringaCard } from "@/components/ui/moringa-card"
+import { cn } from "@/lib/utils"
+
+const STATUS_STYLES: Record<string, string> = {
+  pending:    "bg-yellow-50 text-yellow-700 border border-yellow-200",
+  confirmed:  "bg-blue-50 text-blue-700 border border-blue-200",
+  processing: "bg-indigo-50 text-indigo-700 border border-indigo-200",
+  shipped:    "bg-purple-50 text-purple-700 border border-purple-200",
+  delivered:  "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  cancelled:  "bg-red-50 text-red-700 border border-red-200",
+  refunded:   "bg-orange-50 text-orange-700 border border-orange-200",
+}
+
+const PAYMENT_STYLES: Record<string, string> = {
+  pending:  "bg-yellow-50 text-yellow-600",
+  paid:     "bg-emerald-50 text-emerald-700",
+  failed:   "bg-red-50 text-red-600",
+  refunded: "bg-orange-50 text-orange-700",
+}
 
 export default async function ProfileOrdersPage() {
   const session = await auth()
@@ -31,6 +49,9 @@ export default async function ProfileOrdersPage() {
         total_price
       )
     `)
+    // Exclude payment-failed / cancelled orders (e.g. dismissed Razorpay sessions)
+    .not("status", "eq", "cancelled")
+    .not("payment_status", "eq", "failed")
     .order("created_at", { ascending: false })
 
   if (email) {
@@ -103,11 +124,17 @@ export default async function ProfileOrdersPage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-xs font-bold uppercase tracking-widest">
-                      <span className="px-3 py-1 rounded-full bg-muted text-muted-foreground">{order.status}</span>
-                      <span className="px-3 py-1 rounded-full bg-primary/10 text-primary">{order.payment_status}</span>
+                    <div className="flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+                      <span className={cn("px-3 py-1 rounded-full", STATUS_STYLES[order.status] || "bg-muted text-muted-foreground")}>
+                        {order.status}
+                      </span>
+                      <span className={cn("px-3 py-1 rounded-full", PAYMENT_STYLES[order.payment_status] || "bg-muted text-muted-foreground")}>
+                        {order.payment_status === "paid" ? "✓ Paid" : order.payment_status}
+                      </span>
                       {order.tracking_number && (
-                        <span className="px-3 py-1 rounded-full bg-emerald-50 text-emerald-700">{order.tracking_number}</span>
+                        <span className="px-3 py-1 rounded-full bg-purple-50 text-purple-700">
+                          Tracking: {order.tracking_number}
+                        </span>
                       )}
                     </div>
                   </div>

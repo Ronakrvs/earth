@@ -328,6 +328,15 @@ export default function CheckoutPage() {
           ondismiss: () => {
             setIsProcessing(false)
             paymentLockRef.current = false
+            toast.info("Payment cancelled.")
+            // Cancel the pending order so it doesn't pollute order history
+            if (dbOrderId) {
+              fetch("/api/orders/cancel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ orderId: dbOrderId }),
+              }).catch(() => {})
+            }
           },
         },
       }
@@ -357,27 +366,33 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-6">Checkout</h1>
+      <div className="container mx-auto px-4 py-10 max-w-5xl">
+        <div className="mb-8">
+          <h1 className="text-3xl font-black tracking-tighter text-foreground italic">Checkout</h1>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">Botanical Acquisition Protocol</p>
+        </div>
 
-        <div className="flex items-center mb-8">
+        {/* Step indicator */}
+        <div className="flex items-center mb-10">
           {STEPS.map((s, i) => (
             <div key={s} className="flex items-center flex-1 last:flex-none">
-              <div className={`flex items-center gap-2 ${i <= step ? "text-primary" : "text-muted-foreground"}`}>
+              <div className={`flex items-center gap-2.5 ${i <= step ? "text-primary" : "text-muted-foreground"}`}>
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-colors ${
+                  className={`w-9 h-9 rounded-2xl flex items-center justify-center text-sm font-black border-2 transition-all duration-300 ${
                     i < step
-                      ? "bg-primary border-primary text-primary-foreground"
+                      ? "bg-primary border-primary text-primary-foreground shadow-lg shadow-primary/20"
                       : i === step
-                      ? "border-primary text-primary"
-                      : "border-border text-muted-foreground"
+                      ? "border-primary text-primary bg-primary/5"
+                      : "border-border/50 text-muted-foreground bg-muted/30"
                   }`}
                 >
                   {i < step ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
                 </div>
-                <span className="text-xs font-medium hidden sm:block">{s}</span>
+                <span className={`text-[11px] font-black uppercase tracking-widest hidden sm:block transition-colors ${i === step ? "text-primary" : ""}`}>{s}</span>
               </div>
-              {i < STEPS.length - 1 && <div className={`flex-1 h-0.5 mx-2 ${i < step ? "bg-primary" : "bg-border"}`} />}
+              {i < STEPS.length - 1 && (
+                <div className={`flex-1 h-0.5 mx-3 rounded-full transition-all duration-500 ${i < step ? "bg-primary" : "bg-border/50"}`} />
+              )}
             </div>
           ))}
         </div>
@@ -444,7 +459,7 @@ export default function CheckoutPage() {
                     <Label>Address Line 2 (optional)</Label>
                     <Input className="mt-1" placeholder="Landmark, Apartment etc." {...register("address_line2")} />
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <Label>City</Label>
                       <Input className="mt-1" placeholder="Udaipur" {...register("city")} />

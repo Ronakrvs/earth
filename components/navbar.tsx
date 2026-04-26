@@ -16,7 +16,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
     Menu, ShoppingCart, User, LogOut, Settings,
-    Package, Shield, X
+    Package, Shield, X, Search
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
@@ -68,20 +68,20 @@ export default function Navbar() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 max-w-7xl">
-          <div className="flex h-20 items-center justify-between gap-4">
+          <div className="flex h-16 sm:h-20 items-center justify-between gap-2 sm:gap-4">
             {/* Logo */}
-            <Link href="/" className="flex items-center space-x-3 hover:opacity-90 transition-all duration-300 group flex-shrink-0">
-              <div className="relative overflow-hidden rounded-2xl p-1 bg-primary/5 group-hover:bg-primary/10 transition-colors">
+            <Link href="/" className="flex items-center space-x-2 sm:space-x-3 hover:opacity-90 transition-all duration-300 group flex-shrink-0 min-w-0">
+              <div className="relative overflow-hidden rounded-2xl p-1 bg-primary/5 group-hover:bg-primary/10 transition-colors flex-shrink-0">
                 <Image
                   src="/images/logo.png"
                   alt="Shigruvedas"
-                  width={42}
-                  height={42}
-                  className="drop-shadow-sm group-hover:scale-110 transition-transform duration-500"
+                  width={38}
+                  height={38}
+                  className="drop-shadow-sm group-hover:scale-110 transition-transform duration-500 sm:w-[42px] sm:h-[42px]"
                 />
               </div>
-              <div className="flex flex-col">
-                <span className="font-black text-xl text-slate-900 tracking-tighter leading-none group-hover:text-primary transition-colors">SHIGRUVEDAS</span>
+              <div className="flex flex-col min-w-0">
+                <span className="font-black text-base sm:text-xl text-slate-900 tracking-tighter leading-none group-hover:text-primary transition-colors whitespace-nowrap">SHIGRUVEDAS</span>
                 <span className="text-[10px] text-primary font-bold hidden sm:block tracking-[0.2em] uppercase mt-1 opacity-70">Earth to Wellness</span>
               </div>
             </Link>
@@ -111,9 +111,18 @@ export default function Navbar() {
             </nav>
 
             {/* Right actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 sm:gap-3">
               {/* Theme Toggle */}
               <ThemeToggle />
+
+              {/* Search */}
+              <Link
+                href="/search"
+                className="hidden sm:flex p-3 text-slate-600 hover:text-primary hover:bg-primary/5 rounded-2xl transition-all duration-300 group"
+                aria-label="Search products"
+              >
+                <Search className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              </Link>
 
               {/* Cart */}
               <button

@@ -24,12 +24,12 @@ export async function GET() {
     // Basic stats
     const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
     const { count: productCount } = await supabase.from('products').select('*', { count: 'exact', head: true })
-    const { data: orders } = await supabase.from('orders').select('total_amount, status, created_at')
+    const { data: orders } = await supabase.from('orders').select('total, status, created_at')
     const { count: lowStockCount } = await supabase.from('product_variants').select('*', { count: 'exact', head: true }).lte('stock', 5)
     const { count: b2bCount } = await supabase.from('b2b_inquiries').select('*', { count: 'exact', head: true }).eq('status', 'new')
     const { count: pendingReviews } = await supabase.from('reviews').select('*', { count: 'exact', head: true }).eq('is_approved', false)
 
-    const totalRevenue = orders?.reduce((sum, order) => sum + (Number(order.total_amount) || 0), 0) || 0
+    const totalRevenue = orders?.reduce((sum, order) => sum + (Number(order.total) || 0), 0) || 0
     const deliveredOrders = orders?.filter(o => o.status === 'delivered').length || 0
     const pendingOrders = orders?.filter(o => o.status === 'pending' || o.status === 'processing').length || 0
 
@@ -42,7 +42,7 @@ export async function GET() {
 
     const salesOverTime = last7Days.map(date => {
       const dayOrders = orders?.filter(o => o.created_at.startsWith(date)) || []
-      const revenue = dayOrders.reduce((sum, o) => sum + (Number(o.total_amount) || 0), 0)
+      const revenue = dayOrders.reduce((sum, o) => sum + (Number(o.total) || 0), 0)
       return { date, revenue, count: dayOrders.length }
     })
 

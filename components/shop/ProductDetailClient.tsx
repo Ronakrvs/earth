@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -42,8 +42,21 @@ export default function ProductDetailClient({ product, subscriptionEnabled = tru
   const [quantity, setQuantity] = useState(1)
   const [activeImage, setActiveImage] = useState(product.thumbnail)
   const [subscribeMode, setSubscribeMode] = useState(false)
+  const [stickyVisible, setStickyVisible] = useState(false)
+  const addToCartRef = useRef<HTMLDivElement>(null)
   const addItem = useCart((s) => s.addItem)
   const openCart = useCart((s) => s.openCart)
+
+  useEffect(() => {
+    const el = addToCartRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "0px 0px -80px 0px" }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   const discount = selectedVariant.compare_price
     ? Math.round(((selectedVariant.compare_price - selectedVariant.price) / selectedVariant.compare_price) * 100)
@@ -241,7 +254,7 @@ export default function ProductDetailClient({ product, subscriptionEnabled = tru
                 </div>
 
                 {/* Action Row */}
-                <div className="flex flex-col sm:flex-row gap-4">
+                <div ref={addToCartRef} className="flex flex-col sm:flex-row gap-4">
                     <div className="flex items-center h-16 bg-white border-2 border-slate-100 rounded-2xl px-2">
                         <button
                             onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -345,6 +358,35 @@ export default function ProductDetailClient({ product, subscriptionEnabled = tru
             </div>
         </motion.div>
       </div>
+
+      {/* ─── STICKY MOBILE CTA ───────────────────────────────────── */}
+      <AnimatePresence>
+        {stickyVisible && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-white/95 backdrop-blur-md border-t border-slate-100 shadow-2xl px-4 py-3 safe-bottom"
+          >
+            <div className="flex items-center gap-3">
+              <div>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Price</p>
+                <p className="text-xl font-black text-slate-900">₹{selectedVariant.price}</p>
+              </div>
+              <Button
+                size="lg"
+                className="flex-1 h-14 bg-primary hover:bg-primary-dark text-white font-black rounded-2xl shadow-xl shadow-primary/25 active:scale-95 gap-2 transition-all"
+                onClick={handleAddToCart}
+                disabled={selectedVariant.stock === 0}
+              >
+                <ShoppingCart className="h-5 w-5" />
+                {selectedVariant.stock === 0 ? "Out of Stock" : "Add to Cart"}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

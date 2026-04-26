@@ -10,7 +10,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- PROFILES TABLE
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  id UUID PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   full_name TEXT,
   phone TEXT,
@@ -34,25 +34,6 @@ BEGIN
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
-
--- Auto-create profile on user signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, full_name, avatar_url)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE OR REPLACE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ==========================================
 -- PRODUCTS TABLE
@@ -392,6 +373,7 @@ ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 -- Profiles: users can view and edit their own profile; admins can view all
 CREATE POLICY "profiles_select_own" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles_update_own" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "profiles_insert_own" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id OR auth.uid() IS NULL);
 CREATE POLICY "profiles_select_admin" ON public.profiles FOR SELECT USING (check_is_admin());
 
 -- Products: publicly readable; only admins can write
@@ -439,3 +421,23 @@ CREATE POLICY "recipes_admin" ON public.recipes FOR ALL USING (check_is_admin())
 ALTER TABLE public.contact_messages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "contact_insert_public" ON public.contact_messages FOR INSERT WITH CHECK (true);
 CREATE POLICY "contact_admin" ON public.contact_messages FOR ALL USING (check_is_admin());
+
+-- ==========================================
+-- WISHLISTS TABLE
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.wishlists (
+  id         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id    UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, product_id)
+);
+
+ALTER TABLE public.wishlists ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "wishlists_own" ON public.wishlists
+  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "wishlists_admin" ON public.wishlists
+  FOR ALL USING (check_is_admin());
+
+CREATE INDEX IF NOT EXISTS wishlists_user_id_idx ON public.wishlists (user_id);
+CREATE INDEX IF NOT EXISTS wishlists_product_id_idx ON public.wishlists (product_id);

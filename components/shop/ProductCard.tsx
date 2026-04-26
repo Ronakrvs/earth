@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { ShoppingCart, Star, Leaf } from "lucide-react"
 import { useCart } from "@/lib/store/cart"
 import { toast } from "sonner"
+import WishlistButton from "@/components/WishlistButton"
 
 export interface ProductVariant {
   id: string
@@ -88,6 +89,9 @@ export default function ProductCard({ product }: ProductCardProps) {
                 -{discount}% OFF
               </Badge>
             )}
+          </div>
+          <div className="absolute top-4 right-4">
+            <WishlistButton productId={product.id} size="sm" />
           </div>
         </div>
 

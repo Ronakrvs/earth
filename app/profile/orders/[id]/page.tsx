@@ -6,7 +6,7 @@ import { ArrowLeft, Download, ExternalLink, Package, Truck, CheckCircle2, Clock3
 import { Button } from "@/components/ui/button"
 import { MoringaCard } from "@/components/ui/moringa-card"
 
-function getShiprocketTrackStatus(status: string) {
+function getTrackStatus(status: string) {
   const map: Record<string, string> = {
     pending: "processing",
     confirmed: "processing",
@@ -17,6 +17,25 @@ function getShiprocketTrackStatus(status: string) {
     refunded: "processing",
   }
   return map[status] ?? "processing"
+}
+
+// India Post tracking numbers: 2 letters + 9 digits + "IN" (e.g. EW123456789IN)
+function isIndiaPostTracking(trackingNumber: string): boolean {
+  return /^[A-Z]{2}[0-9]{9}IN$/i.test(trackingNumber.trim())
+}
+
+function getTrackingUrl(trackingNumber: string): { url: string; carrier: string } {
+  if (!trackingNumber) return { url: "", carrier: "Shiprocket" }
+  if (isIndiaPostTracking(trackingNumber)) {
+    return {
+      url: `https://www.indiapost.gov.in/VAS/Pages/trackconsignment.aspx?consignmentNo=${encodeURIComponent(trackingNumber.trim())}`,
+      carrier: "India Post",
+    }
+  }
+  return {
+    url: `https://www.shiprocket.in/shipment-tracking/?awb=${encodeURIComponent(trackingNumber)}`,
+    carrier: "Shiprocket",
+  }
 }
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -68,10 +87,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   if (!order) notFound()
 
-  const trackStatus = getShiprocketTrackStatus(order.status)
-  const shiprocketUrl = order.tracking_number
-    ? `https://www.shiprocket.in/shipment-tracking/?awb=${encodeURIComponent(order.tracking_number)}`
-    : "https://www.shiprocket.in/shipment-tracking/"
+  const trackStatus = getTrackStatus(order.status)
+  const trackingInfo = order.tracking_number ? getTrackingUrl(order.tracking_number) : null
 
   const steps = [
     { label: "Order Placed", done: true, active: false, icon: Clock3 },
@@ -82,20 +99,21 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="container mx-auto px-6 py-12 max-w-6xl">
-        <div className="flex items-center justify-between gap-4 mb-10">
-          <div className="flex items-center gap-4">
-            <Link href="/profile/orders" className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 transition-all">
+      <div className="container mx-auto px-4 sm:px-6 py-8 sm:py-12 max-w-6xl">
+        <div className="flex items-center justify-between gap-3 mb-8 sm:mb-10">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <Link href="/profile/orders" className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-primary hover:border-primary/20 transition-all flex-shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Link>
-            <div>
-              <h1 className="text-3xl font-black text-foreground tracking-tight">Order {order.order_number}</h1>
-              <p className="text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-3xl font-black text-foreground tracking-tight truncate">Order {order.order_number}</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground">Placed on {new Date(order.created_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
             </div>
           </div>
-          <Link href={`/profile/orders/${order.id}/invoice`} target="_blank">
-            <Button className="rounded-2xl bg-primary text-primary-foreground font-bold">
-              <Download className="mr-2 h-4 w-4" /> Download Invoice
+          <Link href={`/profile/orders/${order.id}/invoice`} target="_blank" className="flex-shrink-0">
+            <Button className="rounded-2xl bg-primary text-primary-foreground font-bold px-3 sm:px-4">
+              <Download className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Download Invoice</span>
             </Button>
           </Link>
         </div>
@@ -108,9 +126,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <Truck className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-foreground">Shiprocket Tracking</h2>
+                  <h2 className="text-xl font-black text-foreground">
+                    {trackingInfo ? trackingInfo.carrier : "Shipment"} Tracking
+                  </h2>
                   <p className="text-sm text-muted-foreground">
-                    {order.tracking_number ? `AWB: ${order.tracking_number}` : "Tracking number will appear after dispatch"}
+                    {order.tracking_number ? `AWB / Tracking: ${order.tracking_number}` : "Tracking number will appear after dispatch"}
                   </p>
                 </div>
               </div>
@@ -140,15 +160,15 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               </div>
 
               <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                {order.tracking_number ? (
-                  <Link href={shiprocketUrl} target="_blank">
+                {trackingInfo ? (
+                  <Link href={trackingInfo.url} target="_blank" rel="noopener noreferrer">
                     <Button variant="outline" className="rounded-2xl border-border font-bold">
-                      Open Shiprocket Tracking <ExternalLink className="ml-2 h-4 w-4" />
+                      Track on {trackingInfo.carrier} <ExternalLink className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                 ) : (
                   <div className="rounded-2xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
-                    Tracking link will appear here after the AWB is added by the admin.
+                    Tracking link will appear here after dispatch.
                   </div>
                 )}
               </div>

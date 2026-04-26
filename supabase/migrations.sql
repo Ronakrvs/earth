@@ -4,6 +4,23 @@
 -- ==========================================
 
 -- ==========================================
+-- PROFILES TABLE DECOUPLE
+-- ==========================================
+-- Remove the auth.users foreign key so NextAuth/Google users can be stored in profiles too.
+DO $$ BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.profiles'::regclass
+      AND confrelid = 'auth.users'::regclass
+  ) THEN
+    ALTER TABLE public.profiles DROP CONSTRAINT IF EXISTS profiles_id_fkey;
+  END IF;
+EXCEPTION WHEN undefined_table THEN
+  NULL;
+END $$;
+
+-- ==========================================
 -- NEWSLETTER SUBSCRIBERS
 -- ==========================================
 CREATE TABLE IF NOT EXISTS public.newsletter_subscribers (
@@ -346,6 +363,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 DROP POLICY IF EXISTS "profiles_select_admin" ON public.profiles;
 CREATE POLICY "profiles_select_admin" ON public.profiles FOR SELECT USING (check_is_admin());
 
+-- Allow service-role inserts (for OAuth bootstrap via NextAuth session callback)
+DROP POLICY IF EXISTS "profiles_insert_own" ON public.profiles;
+CREATE POLICY "profiles_insert_own" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id OR auth.uid() IS NULL);
+
 DROP POLICY IF EXISTS "products_all_admin" ON public.products;
 CREATE POLICY "products_all_admin" ON public.products FOR ALL USING (check_is_admin());
 
@@ -360,3 +382,23 @@ CREATE POLICY "order_items_admin" ON public.order_items FOR ALL USING (check_is_
 
 DROP POLICY IF EXISTS "settings_admin_all" ON public.settings;
 CREATE POLICY "settings_admin_all" ON public.settings FOR ALL USING (check_is_admin());
+
+-- ==========================================
+-- WISHLISTS
+-- ==========================================
+CREATE TABLE IF NOT EXISTS public.wishlists (
+  id         UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  user_id    UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  product_id UUID REFERENCES public.products(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, product_id)
+);
+
+ALTER TABLE public.wishlists ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "wishlists_own" ON public.wishlists
+  FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "wishlists_admin" ON public.wishlists
+  FOR ALL USING (check_is_admin());
+
+CREATE INDEX IF NOT EXISTS wishlists_user_id_idx ON public.wishlists (user_id);
+CREATE INDEX IF NOT EXISTS wishlists_product_id_idx ON public.wishlists (product_id);

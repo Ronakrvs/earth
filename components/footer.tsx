@@ -85,7 +85,7 @@ export default function Footer() {
       <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -translate-y-1/2" />
       
       <div className="container mx-auto px-4 max-w-7xl relative z-10">
-        <div className="grid lg:grid-cols-12 gap-16 mb-24">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 mb-12 lg:mb-24">
           {/* Brand & Mission */}
           <div className="lg:col-span-4">
             <Link href="/" className="inline-flex items-center gap-4 mb-8 group">
@@ -117,7 +117,7 @@ export default function Footer() {
           </div>
 
           {/* Navigation Grid */}
-          <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-8" suppressHydrationWarning>
+          <div className="lg:col-span-4 grid grid-cols-2 md:grid-cols-3 gap-6 lg:gap-8" suppressHydrationWarning>
             <div>
               <h4 className="text-sm font-black uppercase tracking-[0.2em] text-primary mb-8">Sanctuary</h4>
               <ul className="space-y-4">
@@ -207,7 +207,7 @@ export default function Footer() {
         </div>
 
         {/* Newsletter - Glassmorphic Card */}
-        <div className="relative mb-24 p-8 md:p-12 rounded-[32px] bg-card/70 border border-border/60 backdrop-blur-md overflow-hidden">
+        <div className="relative mb-12 lg:mb-24 p-6 md:p-12 rounded-[32px] bg-card/70 border border-border/60 backdrop-blur-md overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-20 hidden md:block">
             <Leaf className="h-24 w-24 text-primary rotate-45" />
           </div>

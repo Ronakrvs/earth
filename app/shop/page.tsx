@@ -100,7 +100,7 @@ export default async function ShopPage({
   return (
     <div className="min-h-screen bg-background">
       {/* ─── SHOP HERO ────────────────────────────────────────────── */}
-      <section className="relative pt-32 pb-24 px-4 overflow-hidden">
+      <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 px-4 overflow-hidden">
         {/* Background Accents */}
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-accent/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/4" />
@@ -138,15 +138,15 @@ export default async function ShopPage({
       <section className="pb-32 px-4">
         <div className="container mx-auto max-w-7xl">
           {/* Controls Bar */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-8 mb-16 py-6 border-y border-slate-100/50">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 mb-10 lg:mb-16 py-4 lg:py-6 border-y border-slate-100/50">
             {/* Category Navigation */}
-            <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
               {CATEGORIES.map((cat, idx) => (
                 <Link
                   key={cat.value}
                   href={`/shop?category=${cat.value}`}
                   className={cn(
-                    "px-6 py-2.5 rounded-2xl text-[13px] font-black uppercase tracking-wider transition-all duration-300",
+                    "px-5 py-2.5 sm:px-6 rounded-2xl text-[12px] sm:text-[13px] font-black uppercase tracking-wider transition-all duration-300 min-h-[44px] flex items-center",
                     activeCategory === cat.value
                       ? "bg-primary text-white shadow-xl shadow-primary/20 scale-105"
                       : "bg-white/50 text-slate-400 hover:text-primary hover:bg-white border border-transparent hover:border-primary/10"
@@ -160,7 +160,7 @@ export default async function ShopPage({
                 <Link
                   href="/shop?category=bundles"
                   className={cn(
-                    "px-6 py-2.5 rounded-2xl text-[13px] font-black uppercase tracking-wider transition-all duration-300 bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100",
+                    "px-5 py-2.5 sm:px-6 rounded-2xl text-[12px] sm:text-[13px] font-black uppercase tracking-wider transition-all duration-300 bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-100 min-h-[44px] flex items-center",
                     activeCategory === "bundles" && "bg-amber-500 text-white border-amber-500 shadow-xl shadow-amber-200 scale-105"
                   )}
                 >
@@ -186,7 +186,7 @@ export default async function ShopPage({
           </div>
 
           {/* Product/Bundle Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 sm:gap-x-8 gap-y-8 sm:gap-y-12">
             {activeCategory === "bundles" ? (
               bundles.map((bundle, idx) => (
                 <motion.div
@@ -236,7 +236,7 @@ export default async function ShopPage({
             viewport={{ once: true }}
             className="mt-32"
           >
-            <MoringaCard className="bg-gradient-to-br from-primary to-emerald-800 p-12 md:p-20 text-center text-white overflow-hidden relative border-none" glass={false}>
+            <MoringaCard className="bg-gradient-to-br from-primary to-emerald-800 p-8 sm:p-12 md:p-20 text-center text-white overflow-hidden relative border-none" glass={false}>
               <div className="absolute inset-0 opacity-10 pointer-events-none">
                 <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
                   <path d="M0,0 Q50,20 100,0 V100 Q50,80 0,100 Z" fill="currentColor" />

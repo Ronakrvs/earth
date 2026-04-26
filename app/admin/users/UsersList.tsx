@@ -29,6 +29,12 @@ interface UsersListProps {
 export default function UsersList({ initialUsers, currentUserId }: UsersListProps) {
   const [users, setUsers] = useState(initialUsers)
 
+  const getUserLabel = (user: any) =>
+    user.full_name ||
+    user.email ||
+    user.user_email ||
+    "Anonymous"
+
   const handleRoleChange = async (userId: string, newRole: string) => {
     if (userId === currentUserId) {
       toast.error("You cannot change your own role")
@@ -75,8 +81,8 @@ export default function UsersList({ initialUsers, currentUserId }: UsersListProp
                 <TableRow key={user.id} className="hover:bg-gray-50/50 transition-colors border-b border-gray-100">
                   <TableCell className="py-4 px-6">
                     <div>
-                      <div className="font-semibold text-gray-900">{user.full_name || 'Anonymous'}</div>
-                      <div className="text-xs text-gray-500">{user.email}</div>
+                      <div className="font-semibold text-gray-900">{getUserLabel(user)}</div>
+                      <div className="text-xs text-gray-500">{user.email || user.user_email || ""}</div>
                     </div>
                   </TableCell>
                   <TableCell className="py-4">
